@@ -4,6 +4,9 @@ target/
 !**/src/main/**/target/
 !**/src/test/**/target/
 
+.github/prompts
+TPO_*
+
 ### STS ###
 .apt_generated
 .classpath
