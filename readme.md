@@ -32,9 +32,34 @@ Esto crea PostgreSQL con:
 - Password: `xplorenow`
 - Puerto: `5432`
 
-### 2.3 Levantar API
+### 2.3 Popular base con datos de prueba (sin psql local)
+
+Este proyecto incluye el script de seed en:
+
+- `scripts/seed-postgres.sql`
+
+Como no se asume instalacion local de `psql`, ejecutar el seed directamente en el contenedor:
 
 ```bash
+docker exec -i xplorenow-postgres psql -U xplorenow -d xplorenow < scripts/seed-postgres.sql
+```
+
+Notas:
+
+- El script limpia e inserta datos de prueba (roles, usuarios, destinos, actividades, schedules, imagenes, preferencias y reservas).
+- Se puede re-ejecutar para resetear datos de demo.
+
+### 2.4 Levantar API
+
+```bash
+mvn spring-boot:run
+```
+
+### 2.5 Flujo rapido recomendado para entorno local
+
+```bash
+docker compose up -d
+docker exec -i xplorenow-postgres psql -U xplorenow -d xplorenow < scripts/seed-postgres.sql
 mvn spring-boot:run
 ```
 
