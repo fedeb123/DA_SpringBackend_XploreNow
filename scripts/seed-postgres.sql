@@ -25,15 +25,17 @@ INSERT INTO roles (name) VALUES
 ('ADMIN');
 
 -- Users
--- password_hash is nullable by model, useful for non-auth test fixtures.
+-- Users con contraseña 'password123'
 INSERT INTO users (
   created_at, updated_at, email, password_hash, first_name, last_name, phone, enabled
 ) VALUES
-(NOW(), NOW(), 'traveler1@xplorenow.test', NULL, 'Sofia', 'Lopez', '+5491111111111', TRUE),
-(NOW(), NOW(), 'traveler2@xplorenow.test', NULL, 'Mateo', 'Diaz', '+5491222222222', TRUE),
-(NOW(), NOW(), 'guide.ba@xplorenow.test', NULL, 'Lucia', 'Fernandez', '+5491333333333', TRUE),
-(NOW(), NOW(), 'guide.mza@xplorenow.test', NULL, 'Nicolas', 'Suarez', '+5491444444444', TRUE),
-(NOW(), NOW(), 'admin@xplorenow.test', NULL, 'Admin', 'Root', '+5491555555555', TRUE);
+(NOW(), NOW(), 'traveler1@xplorenow.test', '$2a$10$8.UnVuG9HHgffUDAlk8qfOuVGkqRzgVymGe07xd00DMxs.7uqqQOa', 'Sofia', 'Lopez', '+5491111111111', TRUE),
+(NOW(), NOW(), 'traveler2@xplorenow.test', '$2a$10$8.UnVuG9HHgffUDAlk8qfOuVGkqRzgVymGe07xd00DMxs.7uqqQOa', 'Mateo', 'Diaz', '+5491222222222', TRUE),
+(NOW(), NOW(), 'guide.ba@xplorenow.test', '$2a$10$8.UnVuG9HHgffUDAlk8qfOuVGkqRzgVymGe07xd00DMxs.7uqqQOa', 'Lucia', 'Fernandez', '+5491333333333', TRUE),
+(NOW(), NOW(), 'guide.mza@xplorenow.test', '$2a$10$8.UnVuG9HHgffUDAlk8qfOuVGkqRzgVymGe07xd00DMxs.7uqqQOa', 'Nicolas', 'Suarez', '+5491444444444', TRUE),
+(NOW(), NOW(), 'admin@xplorenow.test', '$2a$10$8.UnVuG9HHgffUDAlk8qfOuVGkqRzgVymGe07xd00DMxs.7uqqQOa', 'Admin', 'Root', '+5491555555555', TRUE),
+-- Agregamos el test@xplorenow.test para tus pruebas de Android
+(NOW(), NOW(), 'test@xplorenow.test', '$2a$10$8.UnVuG9HHgffUDAlk8qfOuVGkqRzgVymGe07xd00DMxs.7uqqQOa', 'Usuario', 'Prueba', '+5491100000000', TRUE);
 
 -- User roles
 INSERT INTO user_roles (user_id, role_id)
