@@ -41,7 +41,7 @@ Este proyecto incluye el script de seed en:
 Como no se asume instalacion local de `psql`, ejecutar el seed directamente en el contenedor:
 
 ```bash
-docker exec -i xplorenow-postgres psql -U xplorenow -d xplorenow < scripts/seed-postgres.sql
+docker exec -i xplorenow psql -U xplorenow -d xplorenow < scripts/seed-postgres.sql
 ```
 
 Notas:
@@ -59,8 +59,8 @@ mvn spring-boot:run
 
 ```bash
 docker compose up -d
-docker exec -i xplorenow-postgres psql -U xplorenow -d xplorenow < scripts/seed-postgres.sql
 mvn spring-boot:run
+docker exec -i xplorenow psql -U xplorenow -d xplorenow < scripts/seed-postgres.sql
 ```
 
 ## 3. Autenticacion y Sesion
@@ -296,7 +296,93 @@ Query params:
 
 Response: `Page<ActivitySummaryDto>`.
 
-## 6. Modelo de errores
+## 6. Perfil del viajero
+
+Todos los endpoints de perfil requieren JWT y usan el usuario autenticado del token.
+
+- `GET /api/v1/profile`: obtiene datos del perfil + resumen de reservas.
+- `PUT /api/v1/profile`: actualiza `firstName`, `lastName`, `phone`, `profilePictureUrl`.
+- `PUT /api/v1/profile/preferences`: reemplaza completamente preferencias de viaje.
+
+Request ejemplo para preferencias:
+
+```json
+{
+  "preferences": ["ADVENTURE", "CULTURE", "RELAX"]
+}
+```
+
+Valores posibles de preferencias:
+
+- `ADVENTURE`
+- `CULTURE`
+- `GASTRONOMY`
+- `NATURE`
+- `RELAX`
+
+## 7. Reservas
+
+Todos los endpoints de reservas requieren JWT y siempre operan sobre el usuario autenticado.
+
+- `POST /api/v1/reservations`
+- `DELETE /api/v1/reservations/{reservationId}`
+- `GET /api/v1/reservations/my?status=&page=&size=&sortBy=&direction=`
+- `GET /api/v1/reservations/{reservationId}`
+
+Request ejemplo para crear reserva:
+
+```json
+{
+  "activityId": 10,
+  "scheduleId": 5,
+  "participantsCount": 2
+}
+```
+
+Notas:
+
+- Si no hay cupos suficientes, responde `409 Conflict`.
+- Cancelar reserva devuelve cupos y registra evento de cambio.
+
+## 8. Historial
+
+El historial corresponde a reservas con estado `COMPLETED`.
+
+- `GET /api/v1/history?fromDate=&toDate=&destinationId=&page=&size=`
+- `GET /api/v1/history/{reservationId}`
+
+## 9. Ratings
+
+- `POST /api/v1/ratings`
+- `GET /api/v1/ratings/pending`
+
+Reglas principales:
+
+- Solo reservas `COMPLETED` del usuario autenticado.
+- Ventana de 48 horas desde finalizacion del schedule.
+- Una sola calificacion por reserva (`409` si ya existe).
+
+Request ejemplo:
+
+```json
+{
+  "reservationId": 50,
+  "activityStars": 5,
+  "guideStars": 4,
+  "comment": "Excelente experiencia, el guia fue muy ameno."
+}
+```
+
+## 10. Swagger y contrato de errores
+
+Todos los endpoints nuevos estan documentados en Swagger/OpenAPI:
+
+- UI: `http://localhost:8080/swagger-ui.html`
+- JSON: `http://localhost:8080/v3/api-docs`
+
+Formato estandar de error mantenido por `GlobalExceptionHandler`.
+
+## 11. Modelo de errores
 
 Formato estandar de error:
 

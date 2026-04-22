@@ -1,9 +1,8 @@
 package com.XploreNowAPI.SpringAPI.domain.model.entity;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-import com.XploreNowAPI.SpringAPI.domain.model.enumtype.ReservationStatus;
+import com.XploreNowAPI.SpringAPI.domain.model.enumtype.ReservationChangeType;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -30,36 +29,26 @@ import lombok.ToString;
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-@ToString(callSuper = true, exclude = {"user", "schedule"})
+@ToString(callSuper = true, exclude = "reservation")
 @Entity
-@Table(name = "reservations")
-public class Reservation extends BaseEntity {
+@Table(name = "reservation_events")
+public class ReservationEvent extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "user_id", nullable = false)
-    private AppUser user;
-
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "schedule_id", nullable = false)
-    private ActivitySchedule schedule;
-
-    @Column(name = "seats", nullable = false)
-    private Integer seats;
-
-    @Column(name = "total_amount", nullable = false, precision = 12, scale = 2)
-    private BigDecimal totalAmount;
+    @JoinColumn(name = "reservation_id", nullable = false)
+    private Reservation reservation;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "status", nullable = false, length = 20)
-    private ReservationStatus status;
+    @Column(name = "change_type", nullable = false, length = 20)
+    private ReservationChangeType changeType;
 
-    @Column(name = "cancelled_at")
-    private LocalDateTime cancelledAt;
+    @Column(name = "changed_at", nullable = false)
+    private LocalDateTime changedAt;
 
-    @Column(name = "voucher_code", unique = true, length = 50)
-    private String voucherCode;
+    @Column(name = "detail", length = 300)
+    private String detail;
 }

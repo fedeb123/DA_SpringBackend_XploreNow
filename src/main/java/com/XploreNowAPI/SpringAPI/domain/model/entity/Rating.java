@@ -1,18 +1,14 @@
 package com.XploreNowAPI.SpringAPI.domain.model.entity;
 
-import com.XploreNowAPI.SpringAPI.domain.model.enumtype.ActivityCategory;
-import com.XploreNowAPI.SpringAPI.domain.model.enumtype.TravelPreferenceType;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -28,10 +24,10 @@ import lombok.ToString;
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-@ToString(callSuper = true, exclude = {"user", "destination"})
+@ToString(callSuper = true, exclude = {"user", "reservation"})
 @Entity
-@Table(name = "user_preferences")
-public class UserPreference extends BaseEntity {
+@Table(name = "ratings")
+public class Rating extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -41,15 +37,16 @@ public class UserPreference extends BaseEntity {
     @JoinColumn(name = "user_id", nullable = false)
     private AppUser user;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "preferred_category", length = 50)
-    private ActivityCategory preferredCategory;
+    @OneToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "reservation_id", nullable = false, unique = true)
+    private Reservation reservation;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "preferred_destination_id")
-    private Destination destination;
+    @Column(name = "activity_stars", nullable = false)
+    private Integer activityStars;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "travel_preference_type", length = 50)
-    private TravelPreferenceType travelPreferenceType;
+    @Column(name = "guide_stars", nullable = false)
+    private Integer guideStars;
+
+    @Column(name = "comment", length = 300)
+    private String comment;
 }
