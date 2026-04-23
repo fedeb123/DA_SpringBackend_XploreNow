@@ -37,9 +37,11 @@ public class ReservationController {
     private final ReservationService reservationService;
 
     @PostMapping
-    @Operation(summary = "Crear reserva", description = "Confirma una reserva descontando cupos del schedule")
+        @Operation(summary = "Crear reserva", description = "Confirma una reserva descontando cupos del schedule. El scheduleId debe obtenerse desde GET /api/v1/activities/{activityId}/schedules")
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "Reserva creada"),
+            @ApiResponse(responseCode = "400", description = "Schedule no pertenece a la actividad"),
+            @ApiResponse(responseCode = "404", description = "Schedule no encontrado"),
             @ApiResponse(responseCode = "409", description = "Sin cupos suficientes")
     })
     public ResponseEntity<ReservationDetailDto> createReservation(@Valid @RequestBody CreateReservationRequest request) {

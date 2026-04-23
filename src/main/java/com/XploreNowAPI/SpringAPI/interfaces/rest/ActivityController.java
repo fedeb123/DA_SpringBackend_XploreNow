@@ -2,11 +2,14 @@ package com.XploreNowAPI.SpringAPI.interfaces.rest;
 
 import com.XploreNowAPI.SpringAPI.application.dto.activity.ActivityDetailDto;
 import com.XploreNowAPI.SpringAPI.application.dto.activity.ActivityFilterRequest;
+import com.XploreNowAPI.SpringAPI.application.dto.activity.ScheduleSummaryDto;
 import com.XploreNowAPI.SpringAPI.application.dto.activity.ActivitySummaryDto;
 import com.XploreNowAPI.SpringAPI.application.service.ActivityQueryService;
 import com.XploreNowAPI.SpringAPI.domain.model.enumtype.ActivityCategory;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -23,6 +26,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/activities")
@@ -68,6 +72,20 @@ public class ActivityController {
     @Operation(summary = "Detalle de actividad", description = "Retorna descripcion, guia, punto de encuentro, politicas, cupos y galeria")
     public ResponseEntity<ActivityDetailDto> getDetail(@PathVariable Long activityId) {
         return ResponseEntity.ok(activityQueryService.getActivityDetail(activityId));
+    }
+
+    @GetMapping("/{activityId}/schedules")
+    @Operation(summary = "Horarios disponibles", description = "Retorna horarios futuros con cupos disponibles para una actividad")
+        @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Horarios obtenidos"),
+            @ApiResponse(responseCode = "404", description = "Actividad no encontrada")
+        })
+    public ResponseEntity<List<ScheduleSummaryDto>> getAvailableSchedules(
+            @PathVariable Long activityId,
+            @Parameter(description = "Fecha del horario (yyyy-MM-dd)")
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date
+    ) {
+        return ResponseEntity.ok(activityQueryService.getAvailableSchedules(activityId, date));
     }
 
     @GetMapping("/featured")

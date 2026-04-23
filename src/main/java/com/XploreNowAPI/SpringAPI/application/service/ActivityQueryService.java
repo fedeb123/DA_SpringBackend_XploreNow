@@ -2,6 +2,7 @@ package com.XploreNowAPI.SpringAPI.application.service;
 
 import com.XploreNowAPI.SpringAPI.application.dto.activity.ActivityDetailDto;
 import com.XploreNowAPI.SpringAPI.application.dto.activity.ActivityFilterRequest;
+import com.XploreNowAPI.SpringAPI.application.dto.activity.ScheduleSummaryDto;
 import com.XploreNowAPI.SpringAPI.application.dto.activity.ActivitySummaryDto;
 import com.XploreNowAPI.SpringAPI.domain.model.entity.Activity;
 import com.XploreNowAPI.SpringAPI.domain.model.entity.ActivityImage;
@@ -20,7 +21,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
@@ -28,6 +31,8 @@ import java.util.Optional;
 @Service
 @RequiredArgsConstructor
 public class ActivityQueryService {
+
+        private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm");
 
     private final ActivityRepository activityRepository;
     private final ActivityScheduleRepository activityScheduleRepository;
@@ -89,6 +94,42 @@ public class ActivityQueryService {
         return featured.map(this::toSummary);
     }
 
+    @Transactional(readOnly = true)
+    public List<ScheduleSummaryDto> getAvailableSchedules(Long activityId, LocalDate date) {
+        if (!activityRepository.existsById(activityId)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Activity not found");
+        }
+
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime from;
+        LocalDateTime to;
+
+        if (date == null) {
+            from = now;
+            to = null;
+        } else {
+            LocalDateTime dayStart = date.atStartOfDay();
+            LocalDateTime dayEnd = date.atTime(23, 59, 59);
+            from = dayStart.isAfter(now) ? dayStart : now;
+            to = dayEnd;
+
+            if (to.isBefore(from)) {
+                return List.of();
+            }
+        }
+
+        return activityScheduleRepository.findAvailableSchedules(activityId, from, to)
+                .stream()
+                .map(schedule -> new ScheduleSummaryDto(
+                        schedule.getId(),
+                        schedule.getStartDateTime().toLocalDate(),
+                        schedule.getStartDateTime().toLocalTime().format(TIME_FORMATTER),
+                        schedule.getAvailableSpots(),
+                        schedule.getTotalSpots()
+                ))
+                .toList();
+    }
+
     private ActivitySummaryDto toSummary(Activity activity) {
         ActivitySchedule nextSchedule = getNextSchedule(activity.getId())
                 .orElse(null);
@@ -98,6 +139,10 @@ public class ActivityQueryService {
                 .map(ActivityImage::getImageUrl)
                 .orElse(null);
 
+        Integer availableSpots = nextSchedule != null && nextSchedule.getAvailableSpots() != null
+                ? nextSchedule.getAvailableSpots()
+                : 0;
+
         return new ActivitySummaryDto(
                 activity.getId(),
                 image,
@@ -106,7 +151,7 @@ public class ActivityQueryService {
                 activity.getCategory(),
                 activity.getDurationMinutes(),
                 nextSchedule != null ? nextSchedule.getPrice() : activity.getBasePrice(),
-                nextSchedule != null ? nextSchedule.getAvailableSpots() : 0
+                availableSpots
         );
     }
 

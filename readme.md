@@ -286,6 +286,49 @@ Response `200 OK` (`ActivityDetailDto`):
 ## 5.3 Actividades destacadas
 
 - Metodo: `GET`
+- Endpoint: `/api/v1/activities/{activityId}/schedules`
+- Auth requerida: Si
+
+Query params:
+
+- `date` (opcional, formato `yyyy-MM-dd`)
+
+Reglas de negocio:
+
+- Devuelve solo schedules futuros.
+- Devuelve solo schedules con `availableSpots > 0`.
+- Si `date` se envia, filtra por ese dia.
+
+Ejemplo:
+
+```http
+GET /api/v1/activities/10/schedules?date=2026-05-10
+```
+
+Response `200 OK`:
+
+```json
+[
+  {
+    "scheduleId": 5,
+    "date": "2026-05-10",
+    "time": "10:00",
+    "availableSpots": 12,
+    "totalSpots": 20
+  },
+  {
+    "scheduleId": 6,
+    "date": "2026-05-10",
+    "time": "15:00",
+    "availableSpots": 5,
+    "totalSpots": 20
+  }
+]
+```
+
+## 5.4 Actividades destacadas
+
+- Metodo: `GET`
 - Endpoint: `/api/v1/activities/featured`
 - Auth requerida: Si
 
@@ -339,10 +382,18 @@ Request ejemplo para crear reserva:
 }
 ```
 
+Flujo recomendado para crear reserva:
+
+1. `GET /api/v1/activities/{activityId}/schedules` (opcionalmente con `?date=`)
+2. Elegir un `scheduleId` disponible de la respuesta
+3. `POST /api/v1/reservations` con `activityId`, `scheduleId`, `participantsCount`
+
 Notas:
 
 - Si no hay cupos suficientes, responde `409 Conflict`.
 - Cancelar reserva devuelve cupos y registra evento de cambio.
+- Estados posibles: `CONFIRMED`, `CANCELLED`, `COMPLETED`.
+- Existe un job horario que transiciona `CONFIRMED -> COMPLETED` cuando el `endDateTime` del schedule ya paso.
 
 ## 8. Historial
 
