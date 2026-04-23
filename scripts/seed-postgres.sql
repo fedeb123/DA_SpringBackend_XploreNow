@@ -250,6 +250,19 @@ WHERE u.email = 'traveler2@xplorenow.test'
 ORDER BY s.start_date_time
 LIMIT 1;
 
+INSERT INTO reservations (
+  created_at, updated_at, user_id, schedule_id, seats, total_amount, status, voucher_code, cancelled_at
+)
+SELECT NOW(), NOW(), u.id, s.id, 1, s.price, 'CONFIRMED', 'XPLR-SEED003', NULL
+FROM users u
+JOIN activity_schedules s ON TRUE
+JOIN activities a ON a.id = s.activity_id
+WHERE u.email = 'traveler1@xplorenow.test'
+  AND a.name = 'Aventura Kayak en Lago'
+  AND s.start_date_time > NOW()
+ORDER BY s.start_date_time
+LIMIT 1;
+
 -- Travel preferences (profile endpoint)
 INSERT INTO user_preferences (
   created_at, updated_at, user_id, preferred_category, preferred_destination_id, travel_preference_type
@@ -289,5 +302,12 @@ INSERT INTO reservation_events (
 SELECT NOW(), NOW(), r.id, 'CONFIRMED', NOW() - INTERVAL '6 days', 'Reserva completada en seed'
 FROM reservations r
 WHERE r.voucher_code = 'XPLR-SEED002';
+
+INSERT INTO reservation_events (
+  created_at, updated_at, reservation_id, change_type, changed_at, detail
+)
+SELECT NOW(), NOW(), r.id, 'CONFIRMED', NOW(), 'Reserva extra para pruebas de cancelacion'
+FROM reservations r
+WHERE r.voucher_code = 'XPLR-SEED003';
 
 COMMIT;
