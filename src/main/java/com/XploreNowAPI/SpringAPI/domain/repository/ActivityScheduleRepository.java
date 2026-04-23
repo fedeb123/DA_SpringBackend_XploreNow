@@ -24,11 +24,23 @@ public interface ActivityScheduleRepository extends JpaRepository<ActivitySchedu
             select s from ActivitySchedule s
             where s.activity.id = :activityId
               and s.startDateTime >= :from
-              and (:to is null or s.startDateTime <= :to)
               and s.totalSpots > s.reservedSpots
             order by s.startDateTime asc
             """)
-    List<ActivitySchedule> findAvailableSchedules(
+    List<ActivitySchedule> findAvailableSchedulesFrom(
+            @Param("activityId") Long activityId,
+            @Param("from") LocalDateTime from
+    );
+
+    @Query("""
+            select s from ActivitySchedule s
+            where s.activity.id = :activityId
+              and s.startDateTime >= :from
+              and s.startDateTime <= :to
+              and s.totalSpots > s.reservedSpots
+            order by s.startDateTime asc
+            """)
+    List<ActivitySchedule> findAvailableSchedulesBetween(
             @Param("activityId") Long activityId,
             @Param("from") LocalDateTime from,
             @Param("to") LocalDateTime to

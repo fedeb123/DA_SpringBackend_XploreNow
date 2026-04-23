@@ -101,24 +101,23 @@ public class ActivityQueryService {
         }
 
         LocalDateTime now = LocalDateTime.now();
-        LocalDateTime from;
-        LocalDateTime to;
+                List<ActivitySchedule> schedules;
 
-        if (date == null) {
-            from = now;
-            to = null;
-        } else {
+                if (date == null) {
+                        schedules = activityScheduleRepository.findAvailableSchedulesFrom(activityId, now);
+                } else {
             LocalDateTime dayStart = date.atStartOfDay();
             LocalDateTime dayEnd = date.atTime(23, 59, 59);
-            from = dayStart.isAfter(now) ? dayStart : now;
-            to = dayEnd;
+                        LocalDateTime from = dayStart.isAfter(now) ? dayStart : now;
 
-            if (to.isBefore(from)) {
+                        if (dayEnd.isBefore(from)) {
                 return List.of();
             }
+
+                        schedules = activityScheduleRepository.findAvailableSchedulesBetween(activityId, from, dayEnd);
         }
 
-        return activityScheduleRepository.findAvailableSchedules(activityId, from, to)
+                return schedules
                 .stream()
                 .map(schedule -> new ScheduleSummaryDto(
                         schedule.getId(),

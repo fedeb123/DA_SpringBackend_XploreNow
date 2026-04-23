@@ -1,17 +1,8 @@
 package com.XploreNowAPI.SpringAPI.interfaces.rest;
 
-import com.XploreNowAPI.SpringAPI.application.dto.activity.ActivityDetailDto;
-import com.XploreNowAPI.SpringAPI.application.dto.activity.ActivityFilterRequest;
-import com.XploreNowAPI.SpringAPI.application.dto.activity.ScheduleSummaryDto;
-import com.XploreNowAPI.SpringAPI.application.dto.activity.ActivitySummaryDto;
-import com.XploreNowAPI.SpringAPI.application.service.ActivityQueryService;
-import com.XploreNowAPI.SpringAPI.domain.model.enumtype.ActivityCategory;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.RequiredArgsConstructor;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -24,9 +15,19 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.util.List;
+import com.XploreNowAPI.SpringAPI.application.dto.activity.ActivityDetailDto;
+import com.XploreNowAPI.SpringAPI.application.dto.activity.ActivityFilterRequest;
+import com.XploreNowAPI.SpringAPI.application.dto.activity.ActivitySummaryDto;
+import com.XploreNowAPI.SpringAPI.application.dto.activity.ScheduleListResponseDto;
+import com.XploreNowAPI.SpringAPI.application.service.ActivityQueryService;
+import com.XploreNowAPI.SpringAPI.domain.model.enumtype.ActivityCategory;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/api/v1/activities")
@@ -80,12 +81,13 @@ public class ActivityController {
             @ApiResponse(responseCode = "200", description = "Horarios obtenidos"),
             @ApiResponse(responseCode = "404", description = "Actividad no encontrada")
         })
-    public ResponseEntity<List<ScheduleSummaryDto>> getAvailableSchedules(
+    public ResponseEntity<ScheduleListResponseDto> getAvailableSchedules(
             @PathVariable Long activityId,
             @Parameter(description = "Fecha del horario (yyyy-MM-dd)")
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date
     ) {
-        return ResponseEntity.ok(activityQueryService.getAvailableSchedules(activityId, date));
+        var schedules = activityQueryService.getAvailableSchedules(activityId, date);
+        return ResponseEntity.ok(new ScheduleListResponseDto(schedules));
     }
 
     @GetMapping("/featured")
