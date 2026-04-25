@@ -3,6 +3,9 @@ package com.XploreNowAPI.SpringAPI.domain.model.entity;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
+
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -59,6 +62,7 @@ public class AppUser extends BaseEntity {
 
     @Builder.Default
     @ManyToMany(fetch = FetchType.EAGER)
+    @Fetch(FetchMode.JOIN)
     @JoinTable(
             name = "user_roles",
             joinColumns = @JoinColumn(name = "user_id"),
