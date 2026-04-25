@@ -11,6 +11,8 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -19,7 +21,9 @@ import com.XploreNowAPI.SpringAPI.application.dto.activity.ActivityDetailDto;
 import com.XploreNowAPI.SpringAPI.application.dto.activity.ActivityFilterRequest;
 import com.XploreNowAPI.SpringAPI.application.dto.activity.ActivitySummaryDto;
 import com.XploreNowAPI.SpringAPI.application.dto.activity.ScheduleListResponseDto;
+import com.XploreNowAPI.SpringAPI.application.dto.activity.UpdateMeetingPointRequest;
 import com.XploreNowAPI.SpringAPI.application.service.ActivityQueryService;
+import com.XploreNowAPI.SpringAPI.application.service.ActivityCommandService;
 import com.XploreNowAPI.SpringAPI.domain.model.enumtype.ActivityCategory;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -36,6 +40,7 @@ import lombok.RequiredArgsConstructor;
 public class ActivityController {
 
     private final ActivityQueryService activityQueryService;
+    private final ActivityCommandService activityCommandService;
 
     @GetMapping
         @Operation(summary = "Listado paginado de actividades", description = "Permite filtros combinados por destino, categoria, fecha y rango de precio")
@@ -103,5 +108,20 @@ public class ActivityController {
         Sort.Direction sortDirection = "desc".equalsIgnoreCase(direction) ? Sort.Direction.DESC : Sort.Direction.ASC;
         Pageable pageable = PageRequest.of(page, size, Sort.by(sortDirection, sortBy));
         return ResponseEntity.ok(activityQueryService.getFeaturedForUser(userId, pageable));
+    }
+
+    @PutMapping("/{activityId}/meeting-point")
+    @Operation(summary = "Actualizar punto de encuentro", description = "Actualiza la dirección y coordenadas del punto de encuentro de una actividad")
+    @ApiResponses({
+            @ApiResponse(responseCode = "204", description = "Punto de encuentro actualizado"),
+            @ApiResponse(responseCode = "404", description = "Actividad no encontrada")
+    })
+    public ResponseEntity<Void> updateMeetingPoint(
+            @Parameter(description = "ID de la actividad")
+            @PathVariable Long activityId,
+            @RequestBody UpdateMeetingPointRequest request
+    ) {
+        activityCommandService.updateMeetingPoint(activityId, request);
+        return ResponseEntity.noContent().build();
     }
 }

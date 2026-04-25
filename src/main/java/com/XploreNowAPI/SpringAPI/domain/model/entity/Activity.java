@@ -34,7 +34,7 @@ import lombok.ToString;
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-@ToString(callSuper = true, exclude = {"destination", "guide", "images", "schedules"})
+@ToString(callSuper = true, exclude = {"destination", "guide", "images", "schedules", "itineraries"})
 @Entity
 @Table(name = "activities")
 public class Activity extends BaseEntity {
@@ -80,6 +80,12 @@ public class Activity extends BaseEntity {
     @Column(name = "meeting_point", nullable = false, length = 255)
     private String meetingPoint;
 
+    @Column(name = "meeting_point_latitude", nullable = true)
+    private Double meetingPointLatitude;
+
+    @Column(name = "meeting_point_longitude", nullable = true)
+    private Double meetingPointLongitude;
+
     @Column(name = "inclusions", length = 1500)
     private String inclusions;
 
@@ -101,4 +107,8 @@ public class Activity extends BaseEntity {
     @Builder.Default
     @OneToMany(mappedBy = "activity", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ActivitySchedule> schedules = new ArrayList<>();
+
+    @Builder.Default
+    @OneToMany(mappedBy = "activity", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ActivityItinerary> itineraries = new ArrayList<>();
 }

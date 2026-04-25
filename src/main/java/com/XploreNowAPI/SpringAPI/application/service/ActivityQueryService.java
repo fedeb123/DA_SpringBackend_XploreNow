@@ -4,6 +4,7 @@ import com.XploreNowAPI.SpringAPI.application.dto.activity.ActivityDetailDto;
 import com.XploreNowAPI.SpringAPI.application.dto.activity.ActivityFilterRequest;
 import com.XploreNowAPI.SpringAPI.application.dto.activity.ScheduleSummaryDto;
 import com.XploreNowAPI.SpringAPI.application.dto.activity.ActivitySummaryDto;
+import com.XploreNowAPI.SpringAPI.application.dto.activity.ActivityItineraryDto;
 import com.XploreNowAPI.SpringAPI.domain.model.entity.Activity;
 import com.XploreNowAPI.SpringAPI.domain.model.entity.ActivityImage;
 import com.XploreNowAPI.SpringAPI.domain.model.entity.ActivitySchedule;
@@ -11,6 +12,7 @@ import com.XploreNowAPI.SpringAPI.domain.model.entity.AppUser;
 import com.XploreNowAPI.SpringAPI.domain.model.entity.UserPreference;
 import com.XploreNowAPI.SpringAPI.domain.repository.ActivityRepository;
 import com.XploreNowAPI.SpringAPI.domain.repository.ActivityScheduleRepository;
+import com.XploreNowAPI.SpringAPI.domain.repository.ActivityItineraryRepository;
 import com.XploreNowAPI.SpringAPI.domain.repository.AppUserRepository;
 import com.XploreNowAPI.SpringAPI.domain.repository.UserPreferenceRepository;
 import lombok.RequiredArgsConstructor;
@@ -36,6 +38,7 @@ public class ActivityQueryService {
 
     private final ActivityRepository activityRepository;
     private final ActivityScheduleRepository activityScheduleRepository;
+    private final ActivityItineraryRepository activityItineraryRepository;
     private final AppUserRepository appUserRepository;
     private final UserPreferenceRepository userPreferenceRepository;
 
@@ -58,6 +61,11 @@ public class ActivityQueryService {
                 .map(ActivityImage::getImageUrl)
                 .toList();
 
+        List<ActivityItineraryDto> itineraries = activityItineraryRepository
+                .findByActivityIdOrderByOrderIndex(activityId).stream()
+                .map(it -> new ActivityItineraryDto(it.getId(), it.getName(), it.getLatitude(), it.getLongitude(), it.getOrderIndex()))
+                .toList();
+
         String guideName = activity.getGuide().getUser().getFirstName() + " " + activity.getGuide().getUser().getLastName();
 
         return new ActivityDetailDto(
@@ -71,12 +79,15 @@ public class ActivityQueryService {
                 activity.getDurationMinutes(),
                 activity.getLanguage(),
                 activity.getMeetingPoint(),
+                activity.getMeetingPointLatitude(),
+                activity.getMeetingPointLongitude(),
                 activity.getInclusions(),
                 activity.getCancellationPolicy(),
                 nextSchedule.getPrice(),
                 activity.getCurrency(),
                 nextSchedule.getAvailableSpots(),
-                gallery
+                gallery,
+                itineraries
         );
     }
 

@@ -4,6 +4,7 @@ import com.XploreNowAPI.SpringAPI.application.dto.reservation.CancelReservationR
 import com.XploreNowAPI.SpringAPI.application.dto.reservation.CreateReservationRequest;
 import com.XploreNowAPI.SpringAPI.application.dto.reservation.ReservationDetailDto;
 import com.XploreNowAPI.SpringAPI.application.dto.reservation.ReservationSummaryDto;
+import com.XploreNowAPI.SpringAPI.application.dto.activity.ActivityItineraryDto;
 import com.XploreNowAPI.SpringAPI.domain.model.entity.Activity;
 import com.XploreNowAPI.SpringAPI.domain.model.entity.ActivitySchedule;
 import com.XploreNowAPI.SpringAPI.domain.model.entity.AppUser;
@@ -12,6 +13,7 @@ import com.XploreNowAPI.SpringAPI.domain.model.entity.ReservationEvent;
 import com.XploreNowAPI.SpringAPI.domain.model.enumtype.ReservationChangeType;
 import com.XploreNowAPI.SpringAPI.domain.model.enumtype.ReservationStatus;
 import com.XploreNowAPI.SpringAPI.domain.repository.ActivityScheduleRepository;
+import com.XploreNowAPI.SpringAPI.domain.repository.ActivityItineraryRepository;
 import com.XploreNowAPI.SpringAPI.domain.repository.ReservationEventRepository;
 import com.XploreNowAPI.SpringAPI.domain.repository.ReservationRepository;
 import lombok.RequiredArgsConstructor;
@@ -36,6 +38,7 @@ public class ReservationService {
     private final CurrentUserService currentUserService;
     private final ReservationRepository reservationRepository;
     private final ActivityScheduleRepository activityScheduleRepository;
+    private final ActivityItineraryRepository activityItineraryRepository;
     private final ReservationEventRepository reservationEventRepository;
 
     @Transactional
@@ -146,6 +149,12 @@ public class ReservationService {
 
     private ReservationDetailDto toDetailDto(Reservation reservation) {
         Activity activity = reservation.getSchedule().getActivity();
+
+        var itineraries = activityItineraryRepository
+                .findByActivityIdOrderByOrderIndex(activity.getId()).stream()
+                .map(it -> new ActivityItineraryDto(it.getId(), it.getName(), it.getLatitude(), it.getLongitude(), it.getOrderIndex()))
+                .toList();
+
         return new ReservationDetailDto(
                 reservation.getId(),
                 activity.getName(),
@@ -156,8 +165,11 @@ public class ReservationService {
                 reservation.getStatus(),
                 reservation.getVoucherCode(),
                 activity.getMeetingPoint(),
+                activity.getMeetingPointLatitude(),
+                activity.getMeetingPointLongitude(),
                 reservation.getTotalAmount(),
-                activity.getCancellationPolicy()
+                activity.getCancellationPolicy(),
+                itineraries
         );
     }
 

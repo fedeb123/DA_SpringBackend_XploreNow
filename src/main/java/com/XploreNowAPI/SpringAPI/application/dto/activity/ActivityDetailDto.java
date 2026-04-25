@@ -17,11 +17,15 @@ public record ActivityDetailDto(
         Integer durationMinutes,
         ActivityLanguage language,
         String meetingPoint,
+        Double meetingPointLatitude,
+        Double meetingPointLongitude,
         String inclusions,
         String cancellationPolicy,
         BigDecimal price,
         String currency,
         Integer availableSpots,
-        List<String> gallery
+        List<String> gallery,
+        List<ActivityItineraryDto> itineraries
 ) {
 }
+
