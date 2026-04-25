@@ -60,6 +60,9 @@ public class AppUser extends BaseEntity {
     @Column(name = "enabled", nullable = false)
     private boolean enabled = true;
 
+    @Column(name = "profile_photo", columnDefinition = "TEXT")
+    private String profilePhoto;
+
     @Builder.Default
     @ManyToMany(fetch = FetchType.EAGER)
     @Fetch(FetchMode.JOIN)
