@@ -27,7 +27,7 @@ import java.math.BigDecimal;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@EqualsAndHashCode(callSuper = true)
+@EqualsAndHashCode(callSuper = true, exclude = {"roles", "schedule"})
 @ToString(callSuper = true, exclude = {"user", "schedule"})
 @Entity
 @Table(name = "reservations")

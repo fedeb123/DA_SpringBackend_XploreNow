@@ -25,7 +25,7 @@ import lombok.ToString;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@EqualsAndHashCode(callSuper = true)
+@EqualsAndHashCode(callSuper = true, exclude = {"user", "destination"})
 @ToString(callSuper = true, exclude = {"user", "destination"})
 @Entity
 @Table(name = "user_preferences")

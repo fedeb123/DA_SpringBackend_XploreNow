@@ -31,7 +31,7 @@ import lombok.ToString;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@EqualsAndHashCode(callSuper = true)
+@EqualsAndHashCode(callSuper = true, exclude = {"roles", "preferences"})
 @ToString(callSuper = true, exclude = {"roles", "preferences"})
 @Entity
 @Table(name = "users")
