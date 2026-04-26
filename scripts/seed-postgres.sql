@@ -99,7 +99,7 @@ SELECT NOW(), NOW(),
        'Free Tour Centro Historico',
        'Recorrido por plazas, edificios iconicos y secretos de la ciudad.',
        'Tour guiado a pie por el centro historico, incluyendo hitos culturales y recomendaciones gastronomicas.',
-       'FREE_TOUR',
+       'CULTURA',
        d.id,
        g.id,
        120,
@@ -125,7 +125,7 @@ SELECT NOW(), NOW(),
        'Excursion Alta Montana',
        'Ruta panoramica por cordillera y miradores de altura.',
        'Salida de dia completo con paradas en puntos panoramicos de la cordillera andina.',
-       'DAY_TRIP',
+       'NATURALEZA',
        d.id,
        g.id,
        540,
@@ -151,7 +151,7 @@ SELECT NOW(), NOW(),
        'Aventura Kayak en Lago',
        'Experiencia de aventura en aguas calmas con equipamiento completo.',
        'Actividad de medio dia para nivel inicial e intermedio con briefing de seguridad.',
-       'ADVENTURE',
+       'AVENTURA',
        d.id,
        g.id,
        180,
@@ -210,7 +210,7 @@ FROM activities a;
 INSERT INTO user_preferences (
   created_at, updated_at, user_id, preferred_category, preferred_destination_id
 )
-SELECT NOW(), NOW(), u.id, 'FREE_TOUR', d.id
+SELECT NOW(), NOW(), u.id, 'CULTURA', d.id
 FROM users u
 JOIN destinations d ON d.name = 'Buenos Aires Centro'
 WHERE u.email = 'traveler1@xplorenow.test';
@@ -218,7 +218,7 @@ WHERE u.email = 'traveler1@xplorenow.test';
 INSERT INTO user_preferences (
   created_at, updated_at, user_id, preferred_category, preferred_destination_id
 )
-SELECT NOW(), NOW(), u.id, 'ADVENTURE', d.id
+SELECT NOW(), NOW(), u.id, 'AVENTURA', d.id
 FROM users u
 JOIN destinations d ON d.name = 'Bariloche Lagos'
 WHERE u.email = 'traveler2@xplorenow.test';
