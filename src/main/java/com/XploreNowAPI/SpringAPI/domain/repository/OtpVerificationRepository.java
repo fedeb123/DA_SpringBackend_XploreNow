@@ -1,5 +1,6 @@
 package com.XploreNowAPI.SpringAPI.domain.repository;
 
+import com.XploreNowAPI.SpringAPI.domain.model.entity.AppUser;
 import com.XploreNowAPI.SpringAPI.domain.model.entity.OtpVerification;
 import com.XploreNowAPI.SpringAPI.domain.model.enumtype.OtpPurpose;
 import com.XploreNowAPI.SpringAPI.domain.model.enumtype.OtpStatus;
@@ -21,4 +22,6 @@ public interface OtpVerificationRepository extends JpaRepository<OtpVerification
             OtpPurpose purpose,
             OtpStatus status
     );
+
+    void deleteAllByUser(AppUser user);
 }
