@@ -47,4 +47,6 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
             AppUser user,
             ReservationStatus status
     );
+
+    void deleteAllByUser(AppUser user);
 }
