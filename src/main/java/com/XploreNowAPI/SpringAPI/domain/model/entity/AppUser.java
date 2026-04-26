@@ -31,7 +31,7 @@ import lombok.ToString;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@EqualsAndHashCode(callSuper = true)
+@EqualsAndHashCode(callSuper = true, exclude = {"roles", "preferences"})
 @ToString(callSuper = true, exclude = {"roles", "preferences"})
 @Entity
 @Table(name = "users")
@@ -59,6 +59,9 @@ public class AppUser extends BaseEntity {
     @Builder.Default
     @Column(name = "enabled", nullable = false)
     private boolean enabled = true;
+
+    @Column(name = "profile_photo", columnDefinition = "TEXT")
+    private String profilePhoto;
 
     @Builder.Default
     @ManyToMany(fetch = FetchType.EAGER)
