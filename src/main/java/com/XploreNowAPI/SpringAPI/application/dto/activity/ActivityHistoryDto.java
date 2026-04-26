@@ -8,6 +8,5 @@ public record ActivityHistoryDto(
         LocalDate date,
         String destination,
         String guideName,
-        Integer durationHours,
-        Integer rating
+        Integer durationMinutes
 ) {}
