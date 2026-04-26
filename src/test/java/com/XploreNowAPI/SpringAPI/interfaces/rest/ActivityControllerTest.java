@@ -70,7 +70,7 @@ class ActivityControllerTest {
                         .queryParam("size", "10"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content[0].activityId").value(1))
-                .andExpect(jsonPath("$.content[0].category").value("AVENTURA"));
+                .andExpect(jsonPath("$.content[0].category").value("CULTURA"));
     }
 
     @Test
