@@ -106,11 +106,10 @@ public class ActivityQueryService {
 
         List<Reservation> reservations = reservationRepository.findCompletedHistoryByUserId(
                 userId,
-                ReservationStatus.CONFIRMED,
+                ReservationStatus.COMPLETED,
                 destination,
                 startDateTime,
-                endDateExclusive,
-                LocalDateTime.now()
+                endDateExclusive
         );
 
         return reservations.stream()
