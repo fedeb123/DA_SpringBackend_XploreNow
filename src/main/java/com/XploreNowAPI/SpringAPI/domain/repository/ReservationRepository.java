@@ -3,7 +3,6 @@ package com.XploreNowAPI.SpringAPI.domain.repository;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -13,46 +12,49 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import com.XploreNowAPI.SpringAPI.domain.model.entity.AppUser;
 import com.XploreNowAPI.SpringAPI.domain.model.entity.Reservation;
 import com.XploreNowAPI.SpringAPI.domain.model.enumtype.ReservationStatus;
 
 public interface ReservationRepository extends JpaRepository<Reservation, Long>, JpaSpecificationExecutor<Reservation> {
 
-    @Query("""
-            SELECT r
-            FROM Reservation r
-            JOIN FETCH r.schedule s
-            JOIN FETCH s.activity a
-            JOIN FETCH a.destination d
-            JOIN FETCH a.guide g
-            JOIN FETCH g.user gu
-            WHERE r.user.id = :userId
-              AND r.status = :status
-              AND (:destination IS NULL OR LOWER(d.name) = LOWER(:destination))
-              AND (:startDateTime IS NULL OR s.startDateTime >= :startDateTime)
-              AND (:endDateExclusive IS NULL OR s.startDateTime < :endDateExclusive)
-            ORDER BY s.startDateTime DESC
-            """)
-    List<Reservation> findCompletedHistoryByUserId(
-            @Param("userId") Long userId,
-            @Param("status") ReservationStatus status,
-            @Param("destination") String destination,
-            @Param("startDateTime") LocalDateTime startDateTime,
-            @Param("endDateExclusive") LocalDateTime endDateExclusive
-    );
+    /*
+     * Legacy methods from main profile/history flow (kept commented intentionally).
+     * Current integration prioritizes the original feature reservation flow.
+     */
+    // @Query("""
+    //         SELECT r
+    //         FROM Reservation r
+    //         JOIN FETCH r.schedule s
+    //         JOIN FETCH s.activity a
+    //         JOIN FETCH a.destination d
+    //         JOIN FETCH a.guide g
+    //         JOIN FETCH g.user gu
+    //         WHERE r.user.id = :userId
+    //           AND r.status = :status
+    //           AND (:destination IS NULL OR LOWER(d.name) = LOWER(:destination))
+    //           AND (:startDateTime IS NULL OR s.startDateTime >= :startDateTime)
+    //           AND (:endDateExclusive IS NULL OR s.startDateTime < :endDateExclusive)
+    //         ORDER BY s.startDateTime DESC
+    //         """)
+    // List<Reservation> findCompletedHistoryByUserId(
+    //         @Param("userId") Long userId,
+    //         @Param("status") ReservationStatus status,
+    //         @Param("destination") String destination,
+    //         @Param("startDateTime") LocalDateTime startDateTime,
+    //         @Param("endDateExclusive") LocalDateTime endDateExclusive
+    // );
 
-    Long countByUserAndStatusIn(
-            AppUser user,
-            Set<ReservationStatus> statuses
-    );
+    // Long countByUserAndStatusIn(
+    //         AppUser user,
+    //         Set<ReservationStatus> statuses
+    // );
 
-    Long countByUserAndStatus(
-            AppUser user,
-            ReservationStatus status
-    );
+    // Long countByUserAndStatus(
+    //         AppUser user,
+    //         ReservationStatus status
+    // );
 
-    void deleteAllByUser(AppUser user);
+    // void deleteAllByUser(AppUser user);
     
     Optional<Reservation> findByIdAndUserId(Long reservationId, Long userId);
 
