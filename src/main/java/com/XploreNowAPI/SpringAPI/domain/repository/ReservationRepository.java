@@ -17,6 +17,45 @@ import com.XploreNowAPI.SpringAPI.domain.model.enumtype.ReservationStatus;
 
 public interface ReservationRepository extends JpaRepository<Reservation, Long>, JpaSpecificationExecutor<Reservation> {
 
+    /*
+     * Legacy methods from main profile/history flow (kept commented intentionally).
+     * Current integration prioritizes the original feature reservation flow.
+     */
+    // @Query("""
+    //         SELECT r
+    //         FROM Reservation r
+    //         JOIN FETCH r.schedule s
+    //         JOIN FETCH s.activity a
+    //         JOIN FETCH a.destination d
+    //         JOIN FETCH a.guide g
+    //         JOIN FETCH g.user gu
+    //         WHERE r.user.id = :userId
+    //           AND r.status = :status
+    //           AND (:destination IS NULL OR LOWER(d.name) = LOWER(:destination))
+    //           AND (:startDateTime IS NULL OR s.startDateTime >= :startDateTime)
+    //           AND (:endDateExclusive IS NULL OR s.startDateTime < :endDateExclusive)
+    //         ORDER BY s.startDateTime DESC
+    //         """)
+    // List<Reservation> findCompletedHistoryByUserId(
+    //         @Param("userId") Long userId,
+    //         @Param("status") ReservationStatus status,
+    //         @Param("destination") String destination,
+    //         @Param("startDateTime") LocalDateTime startDateTime,
+    //         @Param("endDateExclusive") LocalDateTime endDateExclusive
+    // );
+
+    // Long countByUserAndStatusIn(
+    //         AppUser user,
+    //         Set<ReservationStatus> statuses
+    // );
+
+    // Long countByUserAndStatus(
+    //         AppUser user,
+    //         ReservationStatus status
+    // );
+
+    // void deleteAllByUser(AppUser user);
+    
     Optional<Reservation> findByIdAndUserId(Long reservationId, Long userId);
 
     Page<Reservation> findByUserId(Long userId, Pageable pageable);

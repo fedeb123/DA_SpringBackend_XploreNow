@@ -150,7 +150,7 @@ public class ActivityQueryService {
                 activity.getCategory(),
                 activity.getDurationMinutes(),
                 nextSchedule != null ? nextSchedule.getPrice() : activity.getBasePrice(),
-                availableSpots
+                nextSchedule != null ? nextSchedule.getAvailableSpots() : 0
         );
     }
 

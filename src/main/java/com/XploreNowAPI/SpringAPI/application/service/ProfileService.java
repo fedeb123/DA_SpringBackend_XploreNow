@@ -5,7 +5,6 @@ import com.XploreNowAPI.SpringAPI.application.dto.profile.ReservationSummaryCoun
 import com.XploreNowAPI.SpringAPI.application.dto.profile.UpdateProfileRequest;
 import com.XploreNowAPI.SpringAPI.application.dto.profile.UpdateTravelPreferencesRequest;
 import com.XploreNowAPI.SpringAPI.domain.model.entity.AppUser;
-import com.XploreNowAPI.SpringAPI.domain.model.entity.Reservation;
 import com.XploreNowAPI.SpringAPI.domain.model.entity.UserPreference;
 import com.XploreNowAPI.SpringAPI.domain.model.enumtype.ReservationStatus;
 import com.XploreNowAPI.SpringAPI.domain.model.enumtype.TravelPreferenceType;
@@ -91,4 +90,65 @@ public class ProfileService {
                 summary
         );
     }
+
+    // public void initiateEmailChange(InitiateEmailChangeRequest request) {
+    //     AppUser user = getAuthenticatedUser();
+    //     String newEmail = request.newEmail().trim().toLowerCase(Locale.ROOT);
+
+    //     if (appUserRepository.existsByEmailIgnoreCase(newEmail)) {
+    //         throw new ResponseStatusException(HttpStatus.CONFLICT, "Email already in use");
+    //     }
+
+    //     OtpRequest otpRequest = new OtpRequest(newEmail, OtpPurpose.CHANGE_EMAIL);
+    //     authService.requestOtp(otpRequest);
+    // }
+
+    // public void confirmEmailChange(ChangeEmailRequest request) {
+    //     AppUser user = getAuthenticatedUser();
+    //     String newEmail = request.newEmail().trim().toLowerCase(Locale.ROOT);
+
+    //     OtpVerification otp = otpVerificationRepository
+    //             .findTopByEmailIgnoreCaseAndPurposeAndStatusOrderByCreatedAtDesc(
+    //                     newEmail,
+    //                     OtpPurpose.CHANGE_EMAIL,
+    //                     OtpStatus.PENDING
+    //             )
+    //             .orElseThrow(() -> new ResponseStatusException(
+    //                     HttpStatus.BAD_REQUEST, "No pending OTP for this email"));
+
+    //     if (otp.getExpiresAt().isBefore(LocalDateTime.now())) {
+    //         otp.setStatus(OtpStatus.EXPIRED);
+    //         otpVerificationRepository.save(otp);
+    //         throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "OTP expired");
+    //     }
+
+    //     if (!passwordEncoder.matches(request.code(), otp.getCodeHash())) {
+    //         otp.setAttempts(otp.getAttempts() + 1);
+    //         if (otp.getAttempts() >= otp.getMaxAttempts()) {
+    //             otp.setStatus(OtpStatus.EXPIRED);
+    //         }
+    //         otpVerificationRepository.save(otp);
+    //         throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid OTP code");
+    //     }
+
+    //     otp.setStatus(OtpStatus.CONSUMED);
+    //     otp.setVerifiedAt(LocalDateTime.now());
+    //     otpVerificationRepository.save(otp);
+
+    //     if (appUserRepository.existsByEmailIgnoreCase(newEmail)) {
+    //         throw new ResponseStatusException(HttpStatus.CONFLICT, "Email already in use");
+    //     }
+
+    //     user.setEmail(newEmail);
+    //     appUserRepository.save(user);
+    // }
+
+    // public void deleteAccount() {
+    //     AppUser user = getAuthenticatedUser();
+
+    //     otpVerificationRepository.deleteAllByUser(user);
+    //     reservationRepository.deleteAllByUser(user);
+
+    //     appUserRepository.delete(user);
+    // }
 }
