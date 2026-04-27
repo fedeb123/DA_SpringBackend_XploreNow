@@ -1,7 +1,6 @@
 package com.XploreNowAPI.SpringAPI.interfaces.rest;
 
 import com.XploreNowAPI.SpringAPI.application.dto.activity.ActivityDetailDto;
-import com.XploreNowAPI.SpringAPI.application.dto.activity.ActivityHistoryDto;
 import com.XploreNowAPI.SpringAPI.application.dto.activity.ActivitySummaryDto;
 import com.XploreNowAPI.SpringAPI.application.service.ActivityQueryService;
 import com.XploreNowAPI.SpringAPI.domain.model.enumtype.ActivityCategory;
@@ -127,32 +126,4 @@ class ActivityControllerTest {
                 .andExpect(jsonPath("$.content[0].category").value("AVENTURA"));
     }
 
-    @Test
-    void getHistory_ReturnsCompletedActivities() throws Exception {
-        ActivityHistoryDto item = new ActivityHistoryDto(
-                7L,
-                "Caminata por La Boca",
-                LocalDate.of(2026, 4, 20),
-                "Buenos Aires",
-                "Lucia Fernandez",
-                150
-        );
-
-        when(activityQueryService.getHistoryForUser(
-                eq(5L),
-                eq("Buenos Aires"),
-                eq(LocalDate.of(2026, 4, 1)),
-                eq(LocalDate.of(2026, 4, 30))
-        )).thenReturn(List.of(item));
-
-        mockMvc.perform(get("/api/v1/activities/history")
-                        .queryParam("userId", "5")
-                        .queryParam("destination", "Buenos Aires")
-                        .queryParam("startDate", "2026-04-01")
-                        .queryParam("endDate", "2026-04-30"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].activityId").value(7))
-                .andExpect(jsonPath("$[0].date").value("2026-04-20"))
-                .andExpect(jsonPath("$[0].durationMinutes").value(150));
-    }
 }

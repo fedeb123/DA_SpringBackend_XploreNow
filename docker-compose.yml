@@ -1,7 +1,7 @@
 services:
   postgres:
     image: postgres:16-alpine
-    container_name: xplorenow-postgres
+    container_name: xplorenow
     environment:
       POSTGRES_DB: xplorenow
       POSTGRES_USER: xplorenow

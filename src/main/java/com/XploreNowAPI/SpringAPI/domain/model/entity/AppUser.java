@@ -56,6 +56,9 @@ public class AppUser extends BaseEntity {
     @Column(name = "phone", length = 30)
     private String phone;
 
+    @Column(name = "profile_picture_url", length = 500)
+    private String profilePictureUrl;
+
     @Builder.Default
     @Column(name = "enabled", nullable = false)
     private boolean enabled = true;

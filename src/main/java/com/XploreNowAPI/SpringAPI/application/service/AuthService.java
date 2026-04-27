@@ -1,21 +1,11 @@
 package com.XploreNowAPI.SpringAPI.application.service;
 
-import com.XploreNowAPI.SpringAPI.application.dto.auth.AuthResponse;
-import com.XploreNowAPI.SpringAPI.application.dto.auth.ClassicLoginRequest;
-import com.XploreNowAPI.SpringAPI.application.dto.auth.OtpChallengeResponse;
-import com.XploreNowAPI.SpringAPI.application.dto.auth.OtpRequest;
-import com.XploreNowAPI.SpringAPI.application.dto.auth.OtpVerifyRequest;
-import com.XploreNowAPI.SpringAPI.application.dto.auth.RegisterRequest;
-import com.XploreNowAPI.SpringAPI.domain.model.entity.AppUser;
-import com.XploreNowAPI.SpringAPI.domain.model.entity.OtpVerification;
-import com.XploreNowAPI.SpringAPI.domain.model.entity.Role;
-import com.XploreNowAPI.SpringAPI.domain.model.enumtype.OtpStatus;
-import com.XploreNowAPI.SpringAPI.domain.model.enumtype.RoleType;
-import com.XploreNowAPI.SpringAPI.domain.repository.AppUserRepository;
-import com.XploreNowAPI.SpringAPI.domain.repository.OtpVerificationRepository;
-import com.XploreNowAPI.SpringAPI.domain.repository.RoleRepository;
-import com.XploreNowAPI.SpringAPI.infrastructure.security.JwtService;
-import lombok.RequiredArgsConstructor;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Locale;
+import java.util.Optional;
+import java.util.concurrent.ThreadLocalRandom;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -25,11 +15,24 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Locale;
-import java.util.Optional;
-import java.util.concurrent.ThreadLocalRandom;
+import com.XploreNowAPI.SpringAPI.application.dto.auth.AuthResponse;
+import com.XploreNowAPI.SpringAPI.application.dto.auth.ClassicLoginRequest;
+import com.XploreNowAPI.SpringAPI.application.dto.auth.OtpChallengeResponse;
+import com.XploreNowAPI.SpringAPI.application.dto.auth.OtpRequest;
+import com.XploreNowAPI.SpringAPI.application.dto.auth.OtpVerifyRequest;
+import com.XploreNowAPI.SpringAPI.application.dto.auth.RegisterRequest;
+import com.XploreNowAPI.SpringAPI.domain.model.entity.AppUser;
+import com.XploreNowAPI.SpringAPI.domain.model.entity.OtpVerification;
+import com.XploreNowAPI.SpringAPI.domain.model.entity.Role;
+import com.XploreNowAPI.SpringAPI.domain.model.enumtype.OtpPurpose;
+import com.XploreNowAPI.SpringAPI.domain.model.enumtype.OtpStatus;
+import com.XploreNowAPI.SpringAPI.domain.model.enumtype.RoleType;
+import com.XploreNowAPI.SpringAPI.domain.repository.AppUserRepository;
+import com.XploreNowAPI.SpringAPI.domain.repository.OtpVerificationRepository;
+import com.XploreNowAPI.SpringAPI.domain.repository.RoleRepository;
+import com.XploreNowAPI.SpringAPI.infrastructure.security.JwtService;
+
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
@@ -94,7 +97,14 @@ public class AuthService {
         AppUser user = userRepository.findByEmailIgnoreCase(normalizedEmail)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
 
-        expirePendingOtps(normalizedEmail, request.purpose());
+        return requestOtpForEmail(user, normalizedEmail, request.purpose());
+    }
+
+    @Transactional
+    public OtpChallengeResponse requestOtpForEmail(AppUser user, String email, OtpPurpose purpose) {
+        String normalizedEmail = normalizeEmail(email);
+
+        expirePendingOtps(normalizedEmail, purpose);
 
         String plainCode = generateOtpCode();
         LocalDateTime now = LocalDateTime.now();
@@ -102,7 +112,7 @@ public class AuthService {
                 .user(user)
                 .email(normalizedEmail)
                 .codeHash(passwordEncoder.encode(plainCode))
-                .purpose(request.purpose())
+                .purpose(purpose)
                 .status(OtpStatus.PENDING)
                 .expiresAt(now.plusMinutes(otpExpirationMinutes))
                 .attempts(0)
@@ -110,11 +120,11 @@ public class AuthService {
                 .build();
 
         otpRepository.save(otp);
-        otpDeliveryService.sendOtp(normalizedEmail, plainCode, request.purpose());
+        otpDeliveryService.sendOtp(normalizedEmail, plainCode, purpose);
 
         return new OtpChallengeResponse(
                 normalizedEmail,
-                request.purpose().name(),
+                purpose.name(),
                 otpExpirationMinutes * 60,
                 "OTP sent successfully"
         );
