@@ -5,7 +5,6 @@ import com.XploreNowAPI.SpringAPI.application.dto.profile.ReservationSummaryCoun
 import com.XploreNowAPI.SpringAPI.application.dto.profile.UpdateProfileRequest;
 import com.XploreNowAPI.SpringAPI.application.dto.profile.UpdateTravelPreferencesRequest;
 import com.XploreNowAPI.SpringAPI.domain.model.entity.AppUser;
-import com.XploreNowAPI.SpringAPI.domain.model.entity.Reservation;
 import com.XploreNowAPI.SpringAPI.domain.model.entity.UserPreference;
 import com.XploreNowAPI.SpringAPI.domain.model.enumtype.ReservationStatus;
 import com.XploreNowAPI.SpringAPI.domain.model.enumtype.TravelPreferenceType;
