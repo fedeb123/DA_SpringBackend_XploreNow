@@ -41,7 +41,7 @@ Este proyecto incluye el script de seed en:
 Como no se asume instalacion local de `psql`, ejecutar el seed directamente en el contenedor:
 
 ```bash
-docker exec -i xplorenow-postgres psql -U xplorenow -d xplorenow < scripts/seed-postgres.sql
+docker exec -i xplorenow psql -U xplorenow -d xplorenow < scripts/seed-postgres.sql
 ```
 
 Notas:
@@ -59,8 +59,8 @@ mvn spring-boot:run
 
 ```bash
 docker compose up -d
-docker exec -i xplorenow-postgres psql -U xplorenow -d xplorenow < scripts/seed-postgres.sql
 mvn spring-boot:run
+docker exec -i xplorenow psql -U xplorenow -d xplorenow < scripts/seed-postgres.sql
 ```
 
 ## 3. Autenticacion y Sesion
@@ -286,6 +286,49 @@ Response `200 OK` (`ActivityDetailDto`):
 ## 5.3 Actividades destacadas
 
 - Metodo: `GET`
+- Endpoint: `/api/v1/activities/{activityId}/schedules`
+- Auth requerida: Si
+
+Query params:
+
+- `date` (opcional, formato `yyyy-MM-dd`)
+
+Reglas de negocio:
+
+- Devuelve solo schedules futuros.
+- Devuelve solo schedules con `availableSpots > 0`.
+- Si `date` se envia, filtra por ese dia.
+
+Ejemplo:
+
+```http
+GET /api/v1/activities/10/schedules?date=2026-05-10
+```
+
+Response `200 OK`:
+
+```json
+[
+  {
+    "scheduleId": 5,
+    "date": "2026-05-10",
+    "time": "10:00",
+    "availableSpots": 12,
+    "totalSpots": 20
+  },
+  {
+    "scheduleId": 6,
+    "date": "2026-05-10",
+    "time": "15:00",
+    "availableSpots": 5,
+    "totalSpots": 20
+  }
+]
+```
+
+## 5.4 Actividades destacadas
+
+- Metodo: `GET`
 - Endpoint: `/api/v1/activities/featured`
 - Auth requerida: Si
 
@@ -296,7 +339,101 @@ Query params:
 
 Response: `Page<ActivitySummaryDto>`.
 
-## 6. Modelo de errores
+## 6. Perfil del viajero
+
+Todos los endpoints de perfil requieren JWT y usan el usuario autenticado del token.
+
+- `GET /api/v1/profile`: obtiene datos del perfil + resumen de reservas.
+- `PUT /api/v1/profile`: actualiza `firstName`, `lastName`, `phone`, `profilePictureUrl`.
+- `PUT /api/v1/profile/preferences`: reemplaza completamente preferencias de viaje.
+
+Request ejemplo para preferencias:
+
+```json
+{
+  "preferences": ["ADVENTURE", "CULTURE", "RELAX"]
+}
+```
+
+Valores posibles de preferencias:
+
+- `ADVENTURE`
+- `CULTURE`
+- `GASTRONOMY`
+- `NATURE`
+- `RELAX`
+
+## 7. Reservas
+
+Todos los endpoints de reservas requieren JWT y siempre operan sobre el usuario autenticado.
+
+- `POST /api/v1/reservations`
+- `DELETE /api/v1/reservations/{reservationId}`
+- `GET /api/v1/reservations/my?status=&page=&size=&sortBy=&direction=`
+- `GET /api/v1/reservations/{reservationId}`
+
+Request ejemplo para crear reserva:
+
+```json
+{
+  "activityId": 10,
+  "scheduleId": 5,
+  "participantsCount": 2
+}
+```
+
+Flujo recomendado para crear reserva:
+
+1. `GET /api/v1/activities/{activityId}/schedules` (opcionalmente con `?date=`)
+2. Elegir un `scheduleId` disponible de la respuesta
+3. `POST /api/v1/reservations` con `activityId`, `scheduleId`, `participantsCount`
+
+Notas:
+
+- Si no hay cupos suficientes, responde `409 Conflict`.
+- Cancelar reserva devuelve cupos y registra evento de cambio.
+- Estados posibles: `CONFIRMED`, `CANCELLED`, `COMPLETED`.
+- Existe un job horario que transiciona `CONFIRMED -> COMPLETED` cuando el `endDateTime` del schedule ya paso.
+
+## 8. Historial
+
+El historial corresponde a reservas con estado `COMPLETED`.
+
+- `GET /api/v1/history?fromDate=&toDate=&destinationId=&page=&size=`
+- `GET /api/v1/history/{reservationId}`
+
+## 9. Ratings
+
+- `POST /api/v1/ratings`
+- `GET /api/v1/ratings/pending`
+
+Reglas principales:
+
+- Solo reservas `COMPLETED` del usuario autenticado.
+- Ventana de 48 horas desde finalizacion del schedule.
+- Una sola calificacion por reserva (`409` si ya existe).
+
+Request ejemplo:
+
+```json
+{
+  "reservationId": 50,
+  "activityStars": 5,
+  "guideStars": 4,
+  "comment": "Excelente experiencia, el guia fue muy ameno."
+}
+```
+
+## 10. Swagger y contrato de errores
+
+Todos los endpoints nuevos estan documentados en Swagger/OpenAPI:
+
+- UI: `http://localhost:8080/swagger-ui.html`
+- JSON: `http://localhost:8080/v3/api-docs`
+
+Formato estandar de error mantenido por `GlobalExceptionHandler`.
+
+## 11. Modelo de errores
 
 Formato estandar de error:
 

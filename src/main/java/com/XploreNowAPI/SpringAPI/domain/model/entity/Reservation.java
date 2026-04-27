@@ -1,6 +1,10 @@
 package com.XploreNowAPI.SpringAPI.domain.model.entity;
 
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+
 import com.XploreNowAPI.SpringAPI.domain.model.enumtype.ReservationStatus;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -20,14 +24,12 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 
-import java.math.BigDecimal;
-
 @Getter
 @Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@EqualsAndHashCode(callSuper = true, exclude = {"roles", "schedule"})
+@EqualsAndHashCode(callSuper = true, exclude = {"schedule"})
 @ToString(callSuper = true, exclude = {"user", "schedule"})
 @Entity
 @Table(name = "reservations")
@@ -54,4 +56,10 @@ public class Reservation extends BaseEntity {
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 20)
     private ReservationStatus status;
+
+    @Column(name = "cancelled_at")
+    private LocalDateTime cancelledAt;
+
+    @Column(name = "voucher_code", unique = true, length = 50)
+    private String voucherCode;
 }

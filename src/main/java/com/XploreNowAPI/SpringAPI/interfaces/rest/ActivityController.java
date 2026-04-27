@@ -1,15 +1,8 @@
 package com.XploreNowAPI.SpringAPI.interfaces.rest;
 
-import com.XploreNowAPI.SpringAPI.application.dto.activity.ActivityDetailDto;
-import com.XploreNowAPI.SpringAPI.application.dto.activity.ActivityFilterRequest;
-import com.XploreNowAPI.SpringAPI.application.dto.activity.ActivityHistoryDto;
-import com.XploreNowAPI.SpringAPI.application.dto.activity.ActivitySummaryDto;
-import com.XploreNowAPI.SpringAPI.application.service.ActivityQueryService;
-import com.XploreNowAPI.SpringAPI.domain.model.enumtype.ActivityCategory;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.RequiredArgsConstructor;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -22,9 +15,20 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.util.List;
+import com.XploreNowAPI.SpringAPI.application.dto.activity.ActivityDetailDto;
+import com.XploreNowAPI.SpringAPI.application.dto.activity.ActivityFilterRequest;
+import com.XploreNowAPI.SpringAPI.application.dto.activity.ActivitySummaryDto;
+import com.XploreNowAPI.SpringAPI.application.dto.activity.ScheduleListResponseDto;
+import com.XploreNowAPI.SpringAPI.application.service.ActivityQueryService;
+import com.XploreNowAPI.SpringAPI.domain.model.enumtype.ActivityCategory;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
+
 
 @RestController
 @RequestMapping("/api/v1/activities")
@@ -72,6 +76,21 @@ public class ActivityController {
         return ResponseEntity.ok(activityQueryService.getActivityDetail(activityId));
     }
 
+    @GetMapping("/{activityId}/schedules")
+    @Operation(summary = "Horarios disponibles", description = "Retorna horarios futuros con cupos disponibles para una actividad")
+        @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Horarios obtenidos"),
+            @ApiResponse(responseCode = "404", description = "Actividad no encontrada")
+        })
+    public ResponseEntity<ScheduleListResponseDto> getAvailableSchedules(
+            @PathVariable Long activityId,
+            @Parameter(description = "Fecha del horario (yyyy-MM-dd)")
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date
+    ) {
+        var schedules = activityQueryService.getAvailableSchedules(activityId, date);
+        return ResponseEntity.ok(new ScheduleListResponseDto(schedules));
+    }
+
     @GetMapping("/featured")
     @Operation(summary = "Actividades destacadas", description = "Obtiene actividades recomendadas segun preferencias de usuario")
     public ResponseEntity<Page<ActivitySummaryDto>> getFeatured(
@@ -85,15 +104,5 @@ public class ActivityController {
         Sort.Direction sortDirection = "desc".equalsIgnoreCase(direction) ? Sort.Direction.DESC : Sort.Direction.ASC;
         Pageable pageable = PageRequest.of(page, size, Sort.by(sortDirection, sortBy));
         return ResponseEntity.ok(activityQueryService.getFeaturedForUser(userId, pageable));
-    }
-
-    @GetMapping("/history")
-    public ResponseEntity<List<ActivityHistoryDto>> getHistory(
-            @RequestParam Long userId,
-            @RequestParam(required = false) String destination,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate
-    ) {
-        return ResponseEntity.ok(activityQueryService.getHistoryForUser(userId, destination, startDate, endDate));
     }
 }

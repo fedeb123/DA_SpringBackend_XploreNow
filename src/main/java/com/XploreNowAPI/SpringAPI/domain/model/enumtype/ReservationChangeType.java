@@ -1,7 +1,8 @@
 package com.XploreNowAPI.SpringAPI.domain.model.enumtype;
 
-public enum ReservationStatus {
+public enum ReservationChangeType {
     CONFIRMED,
     CANCELLED,
-    COMPLETED
+    COMPLETED,
+    RESCHEDULED
 }

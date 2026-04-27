@@ -6,6 +6,8 @@
 BEGIN;
 
 -- Clean tables (child to parent)
+DELETE FROM reservation_events;
+DELETE FROM ratings;
 DELETE FROM reservations;
 DELETE FROM otp_verifications;
 DELETE FROM user_preferences;
@@ -225,9 +227,9 @@ WHERE u.email = 'traveler2@xplorenow.test';
 
 -- Reservation samples
 INSERT INTO reservations (
-  created_at, updated_at, user_id, schedule_id, seats, total_amount, status
+  created_at, updated_at, user_id, schedule_id, seats, total_amount, status, voucher_code, cancelled_at
 )
-SELECT NOW(), NOW(), u.id, s.id, 2, s.price * 2, 'CONFIRMED'
+SELECT NOW(), NOW(), u.id, s.id, 2, s.price * 2, 'CONFIRMED', 'XPLR-SEED001', NULL
 FROM users u
 JOIN activity_schedules s ON TRUE
 JOIN activities a ON a.id = s.activity_id
@@ -235,5 +237,77 @@ WHERE u.email = 'traveler1@xplorenow.test'
   AND a.name = 'Excursion Alta Montana'
 ORDER BY s.start_date_time
 LIMIT 1;
+
+INSERT INTO reservations (
+  created_at, updated_at, user_id, schedule_id, seats, total_amount, status, voucher_code, cancelled_at
+)
+SELECT NOW() - INTERVAL '6 days', NOW() - INTERVAL '6 days', u.id, s.id, 1, s.price, 'COMPLETED', 'XPLR-SEED002', NULL
+FROM users u
+JOIN activity_schedules s ON TRUE
+JOIN activities a ON a.id = s.activity_id
+WHERE u.email = 'traveler2@xplorenow.test'
+  AND a.name = 'Aventura Kayak en Lago'
+ORDER BY s.start_date_time
+LIMIT 1;
+
+INSERT INTO reservations (
+  created_at, updated_at, user_id, schedule_id, seats, total_amount, status, voucher_code, cancelled_at
+)
+SELECT NOW(), NOW(), u.id, s.id, 1, s.price, 'CONFIRMED', 'XPLR-SEED003', NULL
+FROM users u
+JOIN activity_schedules s ON TRUE
+JOIN activities a ON a.id = s.activity_id
+WHERE u.email = 'traveler1@xplorenow.test'
+  AND a.name = 'Aventura Kayak en Lago'
+  AND s.start_date_time > NOW()
+ORDER BY s.start_date_time
+LIMIT 1;
+
+-- Travel preferences (profile endpoint)
+INSERT INTO user_preferences (
+  created_at, updated_at, user_id, preferred_category, preferred_destination_id, travel_preference_type
+)
+SELECT NOW(), NOW(), u.id, NULL, NULL, 'ADVENTURE'
+FROM users u
+WHERE u.email = 'traveler1@xplorenow.test';
+
+INSERT INTO user_preferences (
+  created_at, updated_at, user_id, preferred_category, preferred_destination_id, travel_preference_type
+)
+SELECT NOW(), NOW(), u.id, NULL, NULL, 'CULTURE'
+FROM users u
+WHERE u.email = 'traveler1@xplorenow.test';
+
+-- Rating sample
+INSERT INTO ratings (
+  created_at, updated_at, user_id, reservation_id, activity_stars, guide_stars, comment
+)
+SELECT NOW() - INTERVAL '5 days', NOW() - INTERVAL '5 days', u.id, r.id, 5, 4, 'Excelente experiencia de prueba'
+FROM users u
+JOIN reservations r ON r.user_id = u.id
+WHERE u.email = 'traveler2@xplorenow.test'
+  AND r.voucher_code = 'XPLR-SEED002';
+
+-- Reservation events (future sync support)
+INSERT INTO reservation_events (
+  created_at, updated_at, reservation_id, change_type, changed_at, detail
+)
+SELECT NOW(), NOW(), r.id, 'CONFIRMED', NOW(), 'Reserva confirmada por seed'
+FROM reservations r
+WHERE r.voucher_code = 'XPLR-SEED001';
+
+INSERT INTO reservation_events (
+  created_at, updated_at, reservation_id, change_type, changed_at, detail
+)
+SELECT NOW(), NOW(), r.id, 'CONFIRMED', NOW() - INTERVAL '6 days', 'Reserva completada en seed'
+FROM reservations r
+WHERE r.voucher_code = 'XPLR-SEED002';
+
+INSERT INTO reservation_events (
+  created_at, updated_at, reservation_id, change_type, changed_at, detail
+)
+SELECT NOW(), NOW(), r.id, 'CONFIRMED', NOW(), 'Reserva extra para pruebas de cancelacion'
+FROM reservations r
+WHERE r.voucher_code = 'XPLR-SEED003';
 
 COMMIT;

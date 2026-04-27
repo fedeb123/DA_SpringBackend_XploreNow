@@ -1,203 +1,154 @@
 package com.XploreNowAPI.SpringAPI.application.service;
 
-import com.XploreNowAPI.SpringAPI.application.dto.auth.UpdateUserProfileRequest;
-import com.XploreNowAPI.SpringAPI.application.dto.auth.UserProfileResponse;
+import com.XploreNowAPI.SpringAPI.application.dto.profile.ProfileResponseDto;
+import com.XploreNowAPI.SpringAPI.application.dto.profile.ReservationSummaryCounterDto;
+import com.XploreNowAPI.SpringAPI.application.dto.profile.UpdateProfileRequest;
+import com.XploreNowAPI.SpringAPI.application.dto.profile.UpdateTravelPreferencesRequest;
 import com.XploreNowAPI.SpringAPI.domain.model.entity.AppUser;
 import com.XploreNowAPI.SpringAPI.domain.model.entity.UserPreference;
-import com.XploreNowAPI.SpringAPI.domain.model.enumtype.ActivityCategory;
 import com.XploreNowAPI.SpringAPI.domain.model.enumtype.ReservationStatus;
+import com.XploreNowAPI.SpringAPI.domain.model.enumtype.TravelPreferenceType;
 import com.XploreNowAPI.SpringAPI.domain.repository.AppUserRepository;
 import com.XploreNowAPI.SpringAPI.domain.repository.ReservationRepository;
+import com.XploreNowAPI.SpringAPI.domain.repository.UserPreferenceRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.XploreNowAPI.SpringAPI.application.dto.auth.ChangeEmailRequest;
-import com.XploreNowAPI.SpringAPI.application.dto.auth.InitiateEmailChangeRequest;
-import com.XploreNowAPI.SpringAPI.domain.model.entity.OtpVerification;
-import com.XploreNowAPI.SpringAPI.domain.model.enumtype.OtpPurpose;
-import com.XploreNowAPI.SpringAPI.domain.model.enumtype.OtpStatus;
-import com.XploreNowAPI.SpringAPI.domain.repository.OtpVerificationRepository;
-import com.XploreNowAPI.SpringAPI.domain.repository.ReservationRepository;
-import com.XploreNowAPI.SpringAPI.application.service.AuthService;
-import com.XploreNowAPI.SpringAPI.application.dto.auth.OtpRequest;
-import org.springframework.http.HttpStatus;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.web.server.ResponseStatusException;
-import java.time.LocalDateTime;
-import java.util.Locale;
-
-import java.util.Set;
-import java.util.stream.Collectors;
+import java.util.Comparator;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-@Transactional
 public class ProfileService {
 
+    private final CurrentUserService currentUserService;
     private final AppUserRepository appUserRepository;
+    private final UserPreferenceRepository userPreferenceRepository;
     private final ReservationRepository reservationRepository;
 
-    private final OtpVerificationRepository otpVerificationRepository;
-    private final AuthService authService;
-    private final PasswordEncoder passwordEncoder;
-
     @Transactional(readOnly = true)
-    public UserProfileResponse getMyProfile() {
-        AppUser user = getAuthenticatedUser();
-        return mapToResponse(user);
+    public ProfileResponseDto getProfile() {
+        AppUser user = currentUserService.getCurrentUser();
+        return toResponse(user);
     }
 
-    public UserProfileResponse updateMyProfile(UpdateUserProfileRequest request) {
-        AppUser user = getAuthenticatedUser();
+    @Transactional
+    public ProfileResponseDto updateProfile(UpdateProfileRequest request) {
+        AppUser user = currentUserService.getCurrentUser();
 
-        user.setFirstName(request.firstName());
-        user.setLastName(request.lastName());
-        user.setPhone(request.phone());
+        user.setFirstName(request.firstName().trim());
+        user.setLastName(request.lastName().trim());
+        user.setPhone(request.phone() == null ? null : request.phone().trim());
+        user.setProfilePictureUrl(request.profilePictureUrl() == null ? null : request.profilePictureUrl().trim());
 
-        /*
-         * IMPORTANTE:
-         * Esto requiere que AppUser tenga:
-         *
-         * @Column(name = "profile_photo", columnDefinition = "TEXT")
-         * private String profilePhoto;
-         */
-        user.setProfilePhoto(request.profilePhoto());
+        AppUser saved = appUserRepository.save(user);
+        return toResponse(saved);
+    }
 
-        /*
-         * Reemplazar preferencias anteriores:
-         * se limpia todo y se reconstruye.
-         */
-        user.getPreferences().clear();
+    @Transactional
+    public ProfileResponseDto replaceTravelPreferences(UpdateTravelPreferencesRequest request) {
+        AppUser user = currentUserService.getCurrentUser();
 
-        if (request.preferences() != null && !request.preferences().isEmpty()) {
-            for (ActivityCategory category : request.preferences()) {
-                UserPreference preference = UserPreference.builder()
-                        .user(user)
-                        .preferredCategory(category)
-                        .destination(null) // por ahora solo categoría
-                        .build();
+        userPreferenceRepository.deleteByUserIdAndTravelPreferenceTypeIsNotNull(user.getId());
 
-                user.getPreferences().add(preference);
-            }
+        List<TravelPreferenceType> preferences = request.preferences() == null ? List.of() : request.preferences();
+        for (TravelPreferenceType preferenceType : preferences.stream().distinct().toList()) {
+            UserPreference preference = UserPreference.builder()
+                    .user(user)
+                    .travelPreferenceType(preferenceType)
+                    .build();
+            userPreferenceRepository.save(preference);
         }
 
-        AppUser savedUser = appUserRepository.save(user);
-
-        return mapToResponse(savedUser);
+        return toResponse(user);
     }
 
-    private AppUser getAuthenticatedUser() {
-        Authentication authentication =
-                SecurityContextHolder.getContext().getAuthentication();
+    private ProfileResponseDto toResponse(AppUser user) {
+        List<TravelPreferenceType> travelPreferences = userPreferenceRepository
+                .findByUserIdAndTravelPreferenceTypeIsNotNull(user.getId())
+                .stream()
+                .map(UserPreference::getTravelPreferenceType)
+                .distinct()
+                .sorted(Comparator.comparing(Enum::name))
+                .toList();
 
-        if (authentication == null || authentication.getName() == null) {
-            throw new RuntimeException("Usuario no autenticado");
-        }
+        ReservationSummaryCounterDto summary = new ReservationSummaryCounterDto(
+                reservationRepository.countByUserIdAndStatus(user.getId(), ReservationStatus.CONFIRMED),
+                reservationRepository.countByUserIdAndStatus(user.getId(), ReservationStatus.CANCELLED),
+                reservationRepository.countByUserIdAndStatus(user.getId(), ReservationStatus.COMPLETED)
+        );
 
-        String email = authentication.getName();
-
-        return appUserRepository.findByEmailIgnoreCase(email)
-                .orElseThrow(() ->
-                        new RuntimeException("Usuario no encontrado"));
-    }
-
-    private UserProfileResponse mapToResponse(AppUser user) {
-
-        Long reservedActivitiesCount =
-                reservationRepository.countByUserAndStatusIn(
-                        user,
-                        Set.of(
-                                ReservationStatus.PENDING,
-                                ReservationStatus.CONFIRMED
-                        )
-                );
-
-        Long completedActivitiesCount =
-                reservationRepository.countByUserAndStatus(
-                        user,
-                        ReservationStatus.COMPLETED
-                );
-
-        Set<ActivityCategory> preferences =
-                user.getPreferences()
-                        .stream()
-                        .map(UserPreference::getPreferredCategory)
-                        .collect(Collectors.toSet());
-
-        return new UserProfileResponse(
-                user.getEmail(),
+        return new ProfileResponseDto(
+                user.getId(),
                 user.getFirstName(),
                 user.getLastName(),
+                user.getEmail(),
                 user.getPhone(),
-                user.getProfilePhoto(),
-                preferences,
-                reservedActivitiesCount,
-                completedActivitiesCount
+                user.getProfilePictureUrl(),
+                travelPreferences,
+                summary
         );
     }
 
-    public void initiateEmailChange(InitiateEmailChangeRequest request) {
-        AppUser user = getAuthenticatedUser();
-        String newEmail = request.newEmail().trim().toLowerCase(Locale.ROOT);
+    // public void initiateEmailChange(InitiateEmailChangeRequest request) {
+    //     AppUser user = getAuthenticatedUser();
+    //     String newEmail = request.newEmail().trim().toLowerCase(Locale.ROOT);
 
-        if (appUserRepository.existsByEmailIgnoreCase(newEmail)) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Email already in use");
-        }
+    //     if (appUserRepository.existsByEmailIgnoreCase(newEmail)) {
+    //         throw new ResponseStatusException(HttpStatus.CONFLICT, "Email already in use");
+    //     }
 
-        OtpRequest otpRequest = new OtpRequest(newEmail, OtpPurpose.CHANGE_EMAIL);
-        authService.requestOtp(otpRequest);
-    }
+    //     OtpRequest otpRequest = new OtpRequest(newEmail, OtpPurpose.CHANGE_EMAIL);
+    //     authService.requestOtp(otpRequest);
+    // }
 
-    public void confirmEmailChange(ChangeEmailRequest request) {
-        AppUser user = getAuthenticatedUser();
-        String newEmail = request.newEmail().trim().toLowerCase(Locale.ROOT);
+    // public void confirmEmailChange(ChangeEmailRequest request) {
+    //     AppUser user = getAuthenticatedUser();
+    //     String newEmail = request.newEmail().trim().toLowerCase(Locale.ROOT);
 
-        OtpVerification otp = otpVerificationRepository
-                .findTopByEmailIgnoreCaseAndPurposeAndStatusOrderByCreatedAtDesc(
-                        newEmail,
-                        OtpPurpose.CHANGE_EMAIL,
-                        OtpStatus.PENDING
-                )
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.BAD_REQUEST, "No pending OTP for this email"));
+    //     OtpVerification otp = otpVerificationRepository
+    //             .findTopByEmailIgnoreCaseAndPurposeAndStatusOrderByCreatedAtDesc(
+    //                     newEmail,
+    //                     OtpPurpose.CHANGE_EMAIL,
+    //                     OtpStatus.PENDING
+    //             )
+    //             .orElseThrow(() -> new ResponseStatusException(
+    //                     HttpStatus.BAD_REQUEST, "No pending OTP for this email"));
 
-        if (otp.getExpiresAt().isBefore(LocalDateTime.now())) {
-            otp.setStatus(OtpStatus.EXPIRED);
-            otpVerificationRepository.save(otp);
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "OTP expired");
-        }
+    //     if (otp.getExpiresAt().isBefore(LocalDateTime.now())) {
+    //         otp.setStatus(OtpStatus.EXPIRED);
+    //         otpVerificationRepository.save(otp);
+    //         throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "OTP expired");
+    //     }
 
-        if (!passwordEncoder.matches(request.code(), otp.getCodeHash())) {
-            otp.setAttempts(otp.getAttempts() + 1);
-            if (otp.getAttempts() >= otp.getMaxAttempts()) {
-                otp.setStatus(OtpStatus.EXPIRED);
-            }
-            otpVerificationRepository.save(otp);
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid OTP code");
-        }
+    //     if (!passwordEncoder.matches(request.code(), otp.getCodeHash())) {
+    //         otp.setAttempts(otp.getAttempts() + 1);
+    //         if (otp.getAttempts() >= otp.getMaxAttempts()) {
+    //             otp.setStatus(OtpStatus.EXPIRED);
+    //         }
+    //         otpVerificationRepository.save(otp);
+    //         throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid OTP code");
+    //     }
 
-        otp.setStatus(OtpStatus.CONSUMED);
-        otp.setVerifiedAt(LocalDateTime.now());
-        otpVerificationRepository.save(otp);
+    //     otp.setStatus(OtpStatus.CONSUMED);
+    //     otp.setVerifiedAt(LocalDateTime.now());
+    //     otpVerificationRepository.save(otp);
 
-        if (appUserRepository.existsByEmailIgnoreCase(newEmail)) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Email already in use");
-        }
+    //     if (appUserRepository.existsByEmailIgnoreCase(newEmail)) {
+    //         throw new ResponseStatusException(HttpStatus.CONFLICT, "Email already in use");
+    //     }
 
-        user.setEmail(newEmail);
-        appUserRepository.save(user);
-    }
+    //     user.setEmail(newEmail);
+    //     appUserRepository.save(user);
+    // }
 
-    public void deleteAccount() {
-        AppUser user = getAuthenticatedUser();
+    // public void deleteAccount() {
+    //     AppUser user = getAuthenticatedUser();
 
-        otpVerificationRepository.deleteAllByUser(user);
-        reservationRepository.deleteAllByUser(user);
+    //     otpVerificationRepository.deleteAllByUser(user);
+    //     reservationRepository.deleteAllByUser(user);
 
-        appUserRepository.delete(user);
-    }
+    //     appUserRepository.delete(user);
+    // }
 }
-

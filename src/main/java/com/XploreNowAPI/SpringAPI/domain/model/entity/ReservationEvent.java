@@ -1,7 +1,8 @@
 package com.XploreNowAPI.SpringAPI.domain.model.entity;
 
-import com.XploreNowAPI.SpringAPI.domain.model.enumtype.ActivityCategory;
-import com.XploreNowAPI.SpringAPI.domain.model.enumtype.TravelPreferenceType;
+import java.time.LocalDateTime;
+
+import com.XploreNowAPI.SpringAPI.domain.model.enumtype.ReservationChangeType;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -27,29 +28,27 @@ import lombok.ToString;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@EqualsAndHashCode(callSuper = true, exclude = {"user", "destination"})
-@ToString(callSuper = true, exclude = {"user", "destination"})
+@EqualsAndHashCode(callSuper = true)
+@ToString(callSuper = true, exclude = "reservation")
 @Entity
-@Table(name = "user_preferences")
-public class UserPreference extends BaseEntity {
+@Table(name = "reservation_events")
+public class ReservationEvent extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "user_id", nullable = false)
-    private AppUser user;
+    @JoinColumn(name = "reservation_id", nullable = false)
+    private Reservation reservation;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "preferred_category", length = 50)
-    private ActivityCategory preferredCategory;
+    @Column(name = "change_type", nullable = false, length = 20)
+    private ReservationChangeType changeType;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "preferred_destination_id")
-    private Destination destination;
+    @Column(name = "changed_at", nullable = false)
+    private LocalDateTime changedAt;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "travel_preference_type", length = 50)
-    private TravelPreferenceType travelPreferenceType;
+    @Column(name = "detail", length = 300)
+    private String detail;
 }
