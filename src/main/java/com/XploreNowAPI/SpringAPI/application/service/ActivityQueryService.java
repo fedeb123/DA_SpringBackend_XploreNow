@@ -2,16 +2,20 @@ package com.XploreNowAPI.SpringAPI.application.service;
 
 import com.XploreNowAPI.SpringAPI.application.dto.activity.ActivityDetailDto;
 import com.XploreNowAPI.SpringAPI.application.dto.activity.ActivityFilterRequest;
+import com.XploreNowAPI.SpringAPI.application.dto.activity.ActivityHistoryDto;
 import com.XploreNowAPI.SpringAPI.application.dto.activity.ScheduleSummaryDto;
 import com.XploreNowAPI.SpringAPI.application.dto.activity.ActivitySummaryDto;
 import com.XploreNowAPI.SpringAPI.domain.model.entity.Activity;
 import com.XploreNowAPI.SpringAPI.domain.model.entity.ActivityImage;
 import com.XploreNowAPI.SpringAPI.domain.model.entity.ActivitySchedule;
 import com.XploreNowAPI.SpringAPI.domain.model.entity.AppUser;
+import com.XploreNowAPI.SpringAPI.domain.model.entity.Reservation;
 import com.XploreNowAPI.SpringAPI.domain.model.entity.UserPreference;
+import com.XploreNowAPI.SpringAPI.domain.model.enumtype.ReservationStatus;
 import com.XploreNowAPI.SpringAPI.domain.repository.ActivityRepository;
 import com.XploreNowAPI.SpringAPI.domain.repository.ActivityScheduleRepository;
 import com.XploreNowAPI.SpringAPI.domain.repository.AppUserRepository;
+import com.XploreNowAPI.SpringAPI.domain.repository.ReservationRepository;
 import com.XploreNowAPI.SpringAPI.domain.repository.UserPreferenceRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -21,6 +25,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.LocalDate;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -37,6 +42,7 @@ public class ActivityQueryService {
     private final ActivityRepository activityRepository;
     private final ActivityScheduleRepository activityScheduleRepository;
     private final AppUserRepository appUserRepository;
+    private final ReservationRepository reservationRepository;
     private final UserPreferenceRepository userPreferenceRepository;
 
     @Transactional(readOnly = true)
@@ -129,6 +135,28 @@ public class ActivityQueryService {
                 .toList();
     }
 
+    @Transactional(readOnly = true)
+    public List<ActivityHistoryDto> getHistoryForUser(Long userId, String destination, LocalDate start, LocalDate end) {
+        if (!appUserRepository.existsById(userId)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found");
+        }
+
+        LocalDateTime startDateTime = start != null ? start.atStartOfDay() : null;
+        LocalDateTime endDateExclusive = end != null ? end.plusDays(1).atStartOfDay() : null;
+
+        List<Reservation> reservations = reservationRepository.findCompletedHistoryByUserId(
+                userId,
+                ReservationStatus.COMPLETED,
+                destination,
+                startDateTime,
+                endDateExclusive
+        );
+
+        return reservations.stream()
+                .map(this::toHistoryDto)
+                .toList();
+    }
+
     private ActivitySummaryDto toSummary(Activity activity) {
         ActivitySchedule nextSchedule = getNextSchedule(activity.getId())
                 .orElse(null);
@@ -150,7 +178,22 @@ public class ActivityQueryService {
                 activity.getCategory(),
                 activity.getDurationMinutes(),
                 nextSchedule != null ? nextSchedule.getPrice() : activity.getBasePrice(),
-                availableSpots
+                nextSchedule != null ? nextSchedule.getAvailableSpots() : 0
+        );
+    }
+
+    private ActivityHistoryDto toHistoryDto(Reservation reservation) {
+        Activity activity = reservation.getSchedule().getActivity();
+        String guideFullName = activity.getGuide().getUser().getFirstName() + " " +
+                activity.getGuide().getUser().getLastName();
+
+        return new ActivityHistoryDto(
+                activity.getId(),
+                activity.getName(),
+                reservation.getSchedule().getStartDateTime().toLocalDate(),
+                activity.getDestination().getName(),
+                guideFullName,
+                activity.getDurationMinutes()
         );
     }
 

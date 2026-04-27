@@ -3,6 +3,16 @@ package com.XploreNowAPI.SpringAPI.interfaces.rest;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
+import com.XploreNowAPI.SpringAPI.application.dto.activity.ActivityDetailDto;
+import com.XploreNowAPI.SpringAPI.application.dto.activity.ActivityFilterRequest;
+import com.XploreNowAPI.SpringAPI.application.dto.activity.ActivityHistoryDto;
+import com.XploreNowAPI.SpringAPI.application.dto.activity.ActivitySummaryDto;
+import com.XploreNowAPI.SpringAPI.application.service.ActivityQueryService;
+import com.XploreNowAPI.SpringAPI.domain.model.enumtype.ActivityCategory;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -103,5 +113,15 @@ public class ActivityController {
         Sort.Direction sortDirection = "desc".equalsIgnoreCase(direction) ? Sort.Direction.DESC : Sort.Direction.ASC;
         Pageable pageable = PageRequest.of(page, size, Sort.by(sortDirection, sortBy));
         return ResponseEntity.ok(activityQueryService.getFeaturedForUser(userId, pageable));
+    }
+
+    @GetMapping("/history")
+    public ResponseEntity<List<ActivityHistoryDto>> getHistory(
+            @RequestParam Long userId,
+            @RequestParam(required = false) String destination,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate
+    ) {
+        return ResponseEntity.ok(activityQueryService.getHistoryForUser(userId, destination, startDate, endDate));
     }
 }
