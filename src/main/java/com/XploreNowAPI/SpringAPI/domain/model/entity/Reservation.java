@@ -29,7 +29,7 @@ import lombok.ToString;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@EqualsAndHashCode(callSuper = true, exclude = {"roles", "schedule"})
+@EqualsAndHashCode(callSuper = true, exclude = {"schedule"})
 @ToString(callSuper = true, exclude = {"user", "schedule"})
 @Entity
 @Table(name = "reservations")
