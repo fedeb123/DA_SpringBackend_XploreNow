@@ -12,6 +12,7 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import com.XploreNowAPI.SpringAPI.domain.model.entity.AppUser;
 import com.XploreNowAPI.SpringAPI.domain.model.entity.Reservation;
 import com.XploreNowAPI.SpringAPI.domain.model.enumtype.ReservationStatus;
 
@@ -54,7 +55,7 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long>,
     //         ReservationStatus status
     // );
 
-    // void deleteAllByUser(AppUser user);
+    void deleteAllByUser(AppUser user);
     
     Optional<Reservation> findByIdAndUserId(Long reservationId, Long userId);
 

@@ -1,22 +1,32 @@
 package com.XploreNowAPI.SpringAPI.application.service;
 
+import java.util.Comparator;
+import java.util.List;
+import java.util.Locale;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
+
+import com.XploreNowAPI.SpringAPI.application.dto.auth.ChangeEmailRequest;
+import com.XploreNowAPI.SpringAPI.application.dto.auth.InitiateEmailChangeRequest;
+import com.XploreNowAPI.SpringAPI.application.dto.auth.OtpVerifyRequest;
 import com.XploreNowAPI.SpringAPI.application.dto.profile.ProfileResponseDto;
 import com.XploreNowAPI.SpringAPI.application.dto.profile.ReservationSummaryCounterDto;
 import com.XploreNowAPI.SpringAPI.application.dto.profile.UpdateProfileRequest;
 import com.XploreNowAPI.SpringAPI.application.dto.profile.UpdateTravelPreferencesRequest;
 import com.XploreNowAPI.SpringAPI.domain.model.entity.AppUser;
 import com.XploreNowAPI.SpringAPI.domain.model.entity.UserPreference;
+import com.XploreNowAPI.SpringAPI.domain.model.enumtype.OtpPurpose;
 import com.XploreNowAPI.SpringAPI.domain.model.enumtype.ReservationStatus;
 import com.XploreNowAPI.SpringAPI.domain.model.enumtype.TravelPreferenceType;
 import com.XploreNowAPI.SpringAPI.domain.repository.AppUserRepository;
+import com.XploreNowAPI.SpringAPI.domain.repository.OtpVerificationRepository;
 import com.XploreNowAPI.SpringAPI.domain.repository.ReservationRepository;
 import com.XploreNowAPI.SpringAPI.domain.repository.UserPreferenceRepository;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Comparator;
-import java.util.List;
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
@@ -26,6 +36,8 @@ public class ProfileService {
     private final AppUserRepository appUserRepository;
     private final UserPreferenceRepository userPreferenceRepository;
     private final ReservationRepository reservationRepository;
+    private final OtpVerificationRepository otpVerificationRepository;
+    private final AuthService authService;
 
     @Transactional(readOnly = true)
     public ProfileResponseDto getProfile() {
@@ -91,64 +103,41 @@ public class ProfileService {
         );
     }
 
-    // public void initiateEmailChange(InitiateEmailChangeRequest request) {
-    //     AppUser user = getAuthenticatedUser();
-    //     String newEmail = request.newEmail().trim().toLowerCase(Locale.ROOT);
+    @Transactional
+    public void initiateEmailChange(InitiateEmailChangeRequest request) {
+        AppUser user = currentUserService.getCurrentUser();
+        String newEmail = request.newEmail().trim().toLowerCase(Locale.ROOT);
 
-    //     if (appUserRepository.existsByEmailIgnoreCase(newEmail)) {
-    //         throw new ResponseStatusException(HttpStatus.CONFLICT, "Email already in use");
-    //     }
+        if (appUserRepository.existsByEmailIgnoreCase(newEmail)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Email already in use");
+        }
 
-    //     OtpRequest otpRequest = new OtpRequest(newEmail, OtpPurpose.CHANGE_EMAIL);
-    //     authService.requestOtp(otpRequest);
-    // }
+        authService.requestOtpForEmail(user, newEmail, OtpPurpose.CHANGE_EMAIL);
+    }
 
-    // public void confirmEmailChange(ChangeEmailRequest request) {
-    //     AppUser user = getAuthenticatedUser();
-    //     String newEmail = request.newEmail().trim().toLowerCase(Locale.ROOT);
+    @Transactional
+    public ProfileResponseDto confirmEmailChange(ChangeEmailRequest request) {
+        AppUser user = currentUserService.getCurrentUser();
+        String newEmail = request.newEmail().trim().toLowerCase(Locale.ROOT);
 
-    //     OtpVerification otp = otpVerificationRepository
-    //             .findTopByEmailIgnoreCaseAndPurposeAndStatusOrderByCreatedAtDesc(
-    //                     newEmail,
-    //                     OtpPurpose.CHANGE_EMAIL,
-    //                     OtpStatus.PENDING
-    //             )
-    //             .orElseThrow(() -> new ResponseStatusException(
-    //                     HttpStatus.BAD_REQUEST, "No pending OTP for this email"));
+        if (appUserRepository.existsByEmailIgnoreCase(newEmail)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Email already in use");
+        }
 
-    //     if (otp.getExpiresAt().isBefore(LocalDateTime.now())) {
-    //         otp.setStatus(OtpStatus.EXPIRED);
-    //         otpVerificationRepository.save(otp);
-    //         throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "OTP expired");
-    //     }
+        authService.verifyOtp(new OtpVerifyRequest(newEmail, request.code(), OtpPurpose.CHANGE_EMAIL));
 
-    //     if (!passwordEncoder.matches(request.code(), otp.getCodeHash())) {
-    //         otp.setAttempts(otp.getAttempts() + 1);
-    //         if (otp.getAttempts() >= otp.getMaxAttempts()) {
-    //             otp.setStatus(OtpStatus.EXPIRED);
-    //         }
-    //         otpVerificationRepository.save(otp);
-    //         throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid OTP code");
-    //     }
+        user.setEmail(newEmail);
+        appUserRepository.save(user);
+        return getProfile();
+    }
 
-    //     otp.setStatus(OtpStatus.CONSUMED);
-    //     otp.setVerifiedAt(LocalDateTime.now());
-    //     otpVerificationRepository.save(otp);
+    @Transactional
+    public void deleteAccount() {
+        AppUser user = currentUserService.getCurrentUser();
 
-    //     if (appUserRepository.existsByEmailIgnoreCase(newEmail)) {
-    //         throw new ResponseStatusException(HttpStatus.CONFLICT, "Email already in use");
-    //     }
+        otpVerificationRepository.deleteAllByUser(user);
+        reservationRepository.deleteAllByUser(user);
 
-    //     user.setEmail(newEmail);
-    //     appUserRepository.save(user);
-    // }
-
-    // public void deleteAccount() {
-    //     AppUser user = getAuthenticatedUser();
-
-    //     otpVerificationRepository.deleteAllByUser(user);
-    //     reservationRepository.deleteAllByUser(user);
-
-    //     appUserRepository.delete(user);
-    // }
+        appUserRepository.delete(user);
+    }
 }
