@@ -1,12 +1,16 @@
 package com.XploreNowAPI.SpringAPI.interfaces.rest;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.XploreNowAPI.SpringAPI.application.dto.auth.ChangeEmailRequest;
+import com.XploreNowAPI.SpringAPI.application.dto.auth.InitiateEmailChangeRequest;
 import com.XploreNowAPI.SpringAPI.application.dto.profile.ProfileResponseDto;
 import com.XploreNowAPI.SpringAPI.application.dto.profile.UpdateProfileRequest;
 import com.XploreNowAPI.SpringAPI.application.dto.profile.UpdateTravelPreferencesRequest;
@@ -59,26 +63,39 @@ public class ProfileController {
         return ResponseEntity.ok(profileService.replaceTravelPreferences(request));
     }
 
-    // @PostMapping("/me/email-change/initiate")
-    // @Operation(summary = "Iniciar cambio de email", description = "Envía OTP al nuevo email para verificación")
-    // public ResponseEntity<Void> initiateEmailChange(
-    //         @Valid @RequestBody InitiateEmailChangeRequest request) {
-    //     profileService.initiateEmailChange(request);
-    //     return ResponseEntity.noContent().build();
-    // }
+    @PostMapping("/me/email-change/initiate")
+    @Operation(summary = "Iniciar cambio de email", description = "Envía OTP al nuevo email para verificación")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "OTP enviado"),
+            @ApiResponse(responseCode = "400", description = "Email invalido o ya en uso"),
+            @ApiResponse(responseCode = "401", description = "No autenticado")
+    })
+    public ResponseEntity<Void> initiateEmailChange(
+            @Valid @RequestBody InitiateEmailChangeRequest request) {
+        profileService.initiateEmailChange(request);
+        return ResponseEntity.ok().build();
+    }
 
-    // @PostMapping("/me/email-change/confirm")
-    // @Operation(summary = "Confirmar cambio de email", description = "Verifica OTP y actualiza el email")
-    // public ResponseEntity<Void> confirmEmailChange(
-    //         @Valid @RequestBody ChangeEmailRequest request) {
-    //     profileService.confirmEmailChange(request);
-    //     return ResponseEntity.noContent().build();
-    // }
+    @PostMapping("/me/email-change/confirm")
+    @Operation(summary = "Confirmar cambio de email", description = "Verifica OTP y actualiza el email")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Email actualizado"),
+            @ApiResponse(responseCode = "400", description = "OTP invalido o expirado"),
+            @ApiResponse(responseCode = "401", description = "No autenticado")
+    })
+    public ResponseEntity<ProfileResponseDto> confirmEmailChange(
+            @Valid @RequestBody ChangeEmailRequest request) {
+        return ResponseEntity.ok(profileService.confirmEmailChange(request));
+    }
 
-    // @DeleteMapping("/me")
-    // @Operation(summary = "Eliminar cuenta", description = "Elimina permanentemente la cuenta y todos sus datos")
-    // public ResponseEntity<Void> deleteAccount() {
-    //     profileService.deleteAccount();
-    //     return ResponseEntity.noContent().build();
-    // }
+    @DeleteMapping("/me")
+    @Operation(summary = "Eliminar cuenta", description = "Elimina permanentemente la cuenta y todos sus datos")
+    @ApiResponses({
+            @ApiResponse(responseCode = "204", description = "Cuenta eliminada"),
+            @ApiResponse(responseCode = "401", description = "No autenticado")
+    })
+    public ResponseEntity<Void> deleteAccount() {
+        profileService.deleteAccount();
+        return ResponseEntity.noContent().build();
+    }
 }
