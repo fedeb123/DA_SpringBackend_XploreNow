@@ -20,7 +20,6 @@ import java.time.LocalDate;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -63,7 +62,7 @@ class HistoryControllerTest {
         Page<HistoryItemDto> page = new PageImpl<>(List.of(item), PageRequest.of(0, 10), 1);
         when(historyService.getHistory(isNull(), isNull(), isNull(), any())).thenReturn(page);
 
-        mockMvc.perform(get("/api/v1/history"))
+        mockMvc.perform(get("/api/v1/activity/history"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content[0].reservationId").value(50))
                 .andExpect(jsonPath("$.content[0].hasRating").value(true));

@@ -23,7 +23,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.time.LocalDate;
 
 @RestController
-@RequestMapping("/api/v1/history")
+@RequestMapping("/api/v1/activity/history")
 @RequiredArgsConstructor
 @Tag(name = "History", description = "Historial de actividades completadas")
 public class HistoryController {
