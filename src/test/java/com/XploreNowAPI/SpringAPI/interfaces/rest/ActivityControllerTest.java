@@ -22,6 +22,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Collections;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -87,12 +88,15 @@ class ActivityControllerTest {
                 120,
                 ActivityLanguage.SPANISH,
                 "Plaza de Mayo",
+                -34.604722,
+                -58.371111,
                 "Guia local",
                 "Cancelacion hasta 24h",
                 BigDecimal.ZERO,
                 "ARS",
                 20,
-                List.of("https://img.test/10-1.jpg", "https://img.test/10-2.jpg")
+                List.of("https://img.test/10-1.jpg", "https://img.test/10-2.jpg"),
+                Collections.emptyList()
         );
 
         when(activityQueryService.getActivityDetail(eq(10L))).thenReturn(detail);

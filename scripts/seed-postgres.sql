@@ -9,6 +9,7 @@ BEGIN;
 DELETE FROM reservation_events;
 DELETE FROM ratings;
 DELETE FROM reservations;
+DELETE FROM activity_itinerary;
 DELETE FROM otp_verifications;
 DELETE FROM user_preferences;
 DELETE FROM activity_images;
@@ -95,7 +96,7 @@ WHERE u.email = 'guide.mza@xplorenow.test';
 INSERT INTO activities (
   created_at, updated_at, name, short_description, full_description, category,
   destination_id, guide_id, duration_minutes, base_price, currency, language,
-  meeting_point, inclusions, cancellation_policy, highlighted, active
+  meeting_point, meeting_point_latitude, meeting_point_longitude, inclusions, cancellation_policy, highlighted, active
 )
 SELECT NOW(), NOW(),
        'Free Tour Centro Historico',
@@ -109,6 +110,8 @@ SELECT NOW(), NOW(),
        'ARS',
        'SPANISH',
        'Plaza de Mayo, frente al Cabildo',
+       -34.604722,
+       -58.371111,
        'Guia local experto',
        'Cancelacion gratuita hasta 24h antes',
        TRUE,
@@ -121,7 +124,7 @@ WHERE d.name = 'Buenos Aires Centro' AND gu.email = 'guide.ba@xplorenow.test';
 INSERT INTO activities (
   created_at, updated_at, name, short_description, full_description, category,
   destination_id, guide_id, duration_minutes, base_price, currency, language,
-  meeting_point, inclusions, cancellation_policy, highlighted, active
+  meeting_point, meeting_point_latitude, meeting_point_longitude, inclusions, cancellation_policy, highlighted, active
 )
 SELECT NOW(), NOW(),
        'Excursion Alta Montana',
@@ -135,6 +138,8 @@ SELECT NOW(), NOW(),
        'ARS',
        'SPANISH',
        'Terminal de Omnibus de Mendoza, darsena 7',
+       -32.888889,
+       -68.845556,
        'Transporte, guia, snack',
        'Cancelacion gratuita hasta 48h antes',
        TRUE,
@@ -147,7 +152,7 @@ WHERE d.name = 'Mendoza Andes' AND gu.email = 'guide.mza@xplorenow.test';
 INSERT INTO activities (
   created_at, updated_at, name, short_description, full_description, category,
   destination_id, guide_id, duration_minutes, base_price, currency, language,
-  meeting_point, inclusions, cancellation_policy, highlighted, active
+  meeting_point, meeting_point_latitude, meeting_point_longitude, inclusions, cancellation_policy, highlighted, active
 )
 SELECT NOW(), NOW(),
        'Aventura Kayak en Lago',
@@ -161,6 +166,8 @@ SELECT NOW(), NOW(),
        'ARS',
        'ENGLISH',
        'Puerto San Carlos',
+       -41.145556,
+       -71.308889,
        'Equipamiento completo y seguro',
        'Cancelacion gratuita hasta 72h antes',
        FALSE,
@@ -241,7 +248,7 @@ LIMIT 1;
 INSERT INTO reservations (
   created_at, updated_at, user_id, schedule_id, seats, total_amount, status, voucher_code, cancelled_at
 )
-SELECT NOW() - INTERVAL '6 days', NOW() - INTERVAL '6 days', u.id, s.id, 1, s.price, 'COMPLETED', 'XPLR-SEED002', NULL
+SELECT NOW() - INTERVAL '6 days', NOW() - INTERVAL '6 days', u.id, s.id, 1, s.price, 'CONFIRMED', 'XPLR-SEED002', NULL
 FROM users u
 JOIN activity_schedules s ON TRUE
 JOIN activities a ON a.id = s.activity_id
@@ -309,5 +316,114 @@ INSERT INTO reservation_events (
 SELECT NOW(), NOW(), r.id, 'CONFIRMED', NOW(), 'Reserva extra para pruebas de cancelacion'
 FROM reservations r
 WHERE r.voucher_code = 'XPLR-SEED003';
+
+-- Activity Itineraries (Puntos del recorrido)
+-- Free Tour Centro Historico de Buenos Aires
+INSERT INTO activity_itinerary (
+  created_at, updated_at, activity_id, name, latitude, longitude, order_index
+)
+SELECT NOW(), NOW(), a.id, 'Inicio: Plaza de Mayo', -34.604722, -58.371111, 1
+FROM activities a
+WHERE a.name = 'Free Tour Centro Historico';
+
+INSERT INTO activity_itinerary (
+  created_at, updated_at, activity_id, name, latitude, longitude, order_index
+)
+SELECT NOW(), NOW(), a.id, 'Casa Rosada', -34.605556, -58.371389, 2
+FROM activities a
+WHERE a.name = 'Free Tour Centro Historico';
+
+INSERT INTO activity_itinerary (
+  created_at, updated_at, activity_id, name, latitude, longitude, order_index
+)
+SELECT NOW(), NOW(), a.id, 'Catedral Metropolitana', -34.605556, -58.371389, 3
+FROM activities a
+WHERE a.name = 'Free Tour Centro Historico';
+
+INSERT INTO activity_itinerary (
+  created_at, updated_at, activity_id, name, latitude, longitude, order_index
+)
+SELECT NOW(), NOW(), a.id, 'Teatro Colón', -34.601667, -58.385556, 4
+FROM activities a
+WHERE a.name = 'Free Tour Centro Historico';
+
+INSERT INTO activity_itinerary (
+  created_at, updated_at, activity_id, name, latitude, longitude, order_index
+)
+SELECT NOW(), NOW(), a.id, 'Obelisco de Buenos Aires', -34.603722, -58.381592, 5
+FROM activities a
+WHERE a.name = 'Free Tour Centro Historico';
+
+INSERT INTO activity_itinerary (
+  created_at, updated_at, activity_id, name, latitude, longitude, order_index
+)
+SELECT NOW(), NOW(), a.id, 'Café Tortoni', -34.602500, -58.374722, 6
+FROM activities a
+WHERE a.name = 'Free Tour Centro Historico';
+
+-- Excursion Alta Montana en Mendoza
+INSERT INTO activity_itinerary (
+  created_at, updated_at, activity_id, name, latitude, longitude, order_index
+)
+SELECT NOW(), NOW(), a.id, 'Salida: Terminal de Omnibus', -32.888889, -68.845556, 1
+FROM activities a
+WHERE a.name = 'Excursion Alta Montana';
+
+INSERT INTO activity_itinerary (
+  created_at, updated_at, activity_id, name, latitude, longitude, order_index
+)
+SELECT NOW(), NOW(), a.id, 'Mirador del Aconcagua', -32.646667, -68.908333, 2
+FROM activities a
+WHERE a.name = 'Excursion Alta Montana';
+
+INSERT INTO activity_itinerary (
+  created_at, updated_at, activity_id, name, latitude, longitude, order_index
+)
+SELECT NOW(), NOW(), a.id, 'Puente del Inca', -32.636111, -68.921389, 3
+FROM activities a
+WHERE a.name = 'Excursion Alta Montana';
+
+INSERT INTO activity_itinerary (
+  created_at, updated_at, activity_id, name, latitude, longitude, order_index
+)
+SELECT NOW(), NOW(), a.id, 'Laguna de los Horcones', -32.758333, -68.908333, 4
+FROM activities a
+WHERE a.name = 'Excursion Alta Montana';
+
+INSERT INTO activity_itinerary (
+  created_at, updated_at, activity_id, name, latitude, longitude, order_index
+)
+SELECT NOW(), NOW(), a.id, 'Regreso a Terminal', -32.888889, -68.845556, 5
+FROM activities a
+WHERE a.name = 'Excursion Alta Montana';
+
+-- Aventura Kayak en Lago Nahuel Huapi
+INSERT INTO activity_itinerary (
+  created_at, updated_at, activity_id, name, latitude, longitude, order_index
+)
+SELECT NOW(), NOW(), a.id, 'Punto de Encuentro: Puerto San Carlos', -41.145556, -71.308889, 1
+FROM activities a
+WHERE a.name = 'Aventura Kayak en Lago';
+
+INSERT INTO activity_itinerary (
+  created_at, updated_at, activity_id, name, latitude, longitude, order_index
+)
+SELECT NOW(), NOW(), a.id, 'Zona de Kayak - Bahia Lopez', -41.155556, -71.298889, 2
+FROM activities a
+WHERE a.name = 'Aventura Kayak en Lago';
+
+INSERT INTO activity_itinerary (
+  created_at, updated_at, activity_id, name, latitude, longitude, order_index
+)
+SELECT NOW(), NOW(), a.id, 'Descanso Isla Escondida', -41.165556, -71.288889, 3
+FROM activities a
+WHERE a.name = 'Aventura Kayak en Lago';
+
+INSERT INTO activity_itinerary (
+  created_at, updated_at, activity_id, name, latitude, longitude, order_index
+)
+SELECT NOW(), NOW(), a.id, 'Regreso a Puerto', -41.145556, -71.308889, 4
+FROM activities a
+WHERE a.name = 'Aventura Kayak en Lago';
 
 COMMIT;
