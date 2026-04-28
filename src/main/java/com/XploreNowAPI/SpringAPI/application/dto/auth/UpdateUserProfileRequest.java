@@ -1,13 +1,13 @@
-package com.XploreNowAPI.SpringAPI.application.dto.profile;
-
-import java.util.Set;
+package com.XploreNowAPI.SpringAPI.application.dto.auth;
 
 import com.XploreNowAPI.SpringAPI.domain.model.enumtype.ActivityCategory;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
-public record UpdateProfileRequest(
+import java.util.Set;
+
+public record UpdateUserProfileRequest(
 
         @NotBlank
         @Size(max = 80)
@@ -20,10 +20,10 @@ public record UpdateProfileRequest(
         @Size(max = 30)
         String phone,
 
-        @Size(max = 500)
-        String profilePictureUrl,
+        // Foto de perfil en Base64 (opcional)
+        String profilePhoto,
 
+        // Preferencias seleccionadas
         Set<ActivityCategory> preferences
-
 ) {
 }

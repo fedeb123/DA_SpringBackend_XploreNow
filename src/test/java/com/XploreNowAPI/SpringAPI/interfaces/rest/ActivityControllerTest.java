@@ -20,6 +20,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Collections;
 
@@ -57,7 +58,7 @@ class ActivityControllerTest {
                 "https://img.test/1.jpg",
                 "Free Tour Centro",
                 "Buenos Aires",
-                ActivityCategory.FREE_TOUR,
+                ActivityCategory.CULTURA,
                 120,
                 BigDecimal.ZERO,
                 10
@@ -71,7 +72,7 @@ class ActivityControllerTest {
                         .queryParam("size", "10"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content[0].activityId").value(1))
-                .andExpect(jsonPath("$.content[0].category").value("FREE_TOUR"));
+                .andExpect(jsonPath("$.content[0].category").value("CULTURA"));
     }
 
     @Test
@@ -79,7 +80,7 @@ class ActivityControllerTest {
         ActivityDetailDto detail = new ActivityDetailDto(
                 10L,
                 "Free Tour Centro Historico",
-                ActivityCategory.FREE_TOUR,
+                ActivityCategory.CULTURA,
                 "Descripcion corta",
                 "Descripcion extensa",
                 "Buenos Aires",
@@ -113,7 +114,7 @@ class ActivityControllerTest {
                 "https://img.test/3.jpg",
                 "Aventura Kayak",
                 "Bariloche",
-                ActivityCategory.ADVENTURE,
+                ActivityCategory.AVENTURA,
                 180,
                 new BigDecimal("35000"),
                 8
@@ -126,6 +127,7 @@ class ActivityControllerTest {
                         .queryParam("userId", "5"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content[0].activityId").value(3))
-                .andExpect(jsonPath("$.content[0].category").value("ADVENTURE"));
+                .andExpect(jsonPath("$.content[0].category").value("AVENTURA"));
     }
+
 }

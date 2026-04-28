@@ -12,5 +12,9 @@ public interface UserPreferenceRepository extends JpaRepository<UserPreference, 
 
     List<UserPreference> findByUserIdAndTravelPreferenceTypeIsNotNull(Long userId);
 
+    List<UserPreference> findByUserIdAndPreferredCategoryIsNotNull(Long userId);
+
+    void deleteByUserIdAndPreferredCategoryIsNotNull(Long userId);
+
     void deleteByUserIdAndTravelPreferenceTypeIsNotNull(Long userId);
 }

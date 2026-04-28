@@ -18,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -35,12 +36,13 @@ public class HistoryService {
             LocalDate fromDate,
             LocalDate toDate,
             Long destinationId,
+            List<ReservationStatus> statuses,
             Pageable pageable
     ) {
         AppUser user = currentUserService.getCurrentUser();
 
         Page<Reservation> historyPage = reservationRepository.findAll(
-                ReservationSpecifications.historyFilter(user.getId(), fromDate, toDate, destinationId),
+                ReservationSpecifications.historyFilter(user.getId(), fromDate, toDate, destinationId, statuses),
                 pageable
         );
 
@@ -63,10 +65,6 @@ public class HistoryService {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Reservation does not belong to the authenticated user");
         }
 
-        if (reservation.getStatus() != ReservationStatus.COMPLETED) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Reservation is not completed");
-        }
-
         Rating rating = ratingRepository.findByReservationId(reservationId).orElse(null);
         return toHistoryDetail(reservation, rating);
     }
@@ -82,6 +80,7 @@ public class HistoryService {
                 reservation.getSchedule().getStartDateTime().toLocalDate(),
                 guideName,
                 activity.getDurationMinutes(),
+                reservation.getStatus(),
                 rating != null ? rating.getActivityStars() : null,
                 rating != null
         );
@@ -98,6 +97,7 @@ public class HistoryService {
                 reservation.getSchedule().getStartDateTime().toLocalDate(),
                 guideName,
                 activity.getDurationMinutes(),
+                reservation.getStatus(),
                 activity.getMeetingPoint(),
                 activity.getCancellationPolicy(),
                 rating != null ? rating.getActivityStars() : null,
