@@ -392,15 +392,15 @@ Notas:
 
 - Si no hay cupos suficientes, responde `409 Conflict`.
 - Cancelar reserva devuelve cupos y registra evento de cambio.
-- Estados posibles: `CONFIRMED`, `CANCELLED`, `COMPLETED`.
+- Estados posibles: `PENDING`, `CONFIRMED`, `CANCELLED`, `COMPLETED`.
 - Existe un job horario que transiciona `CONFIRMED -> COMPLETED` cuando el `endDateTime` del schedule ya paso.
 
 ## 8. Historial
 
-El historial corresponde a reservas con estado `COMPLETED`.
+El historial corresponde a reservas del usuario autenticado. Por defecto devuelve todos los estados y permite filtrar por `status`.
 
-- `GET /api/v1/history?fromDate=&toDate=&destinationId=&page=&size=`
-- `GET /api/v1/history/{reservationId}`
+- `GET /api/v1/activity/history?fromDate=&toDate=&destinationId=&status=&page=&size=`
+- `GET /api/v1/activity/history/{reservationId}`
 
 ## 9. Ratings
 
