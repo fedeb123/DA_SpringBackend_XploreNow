@@ -19,12 +19,16 @@ public final class ReservationSpecifications {
             Long userId,
             LocalDate fromDate,
             LocalDate toDate,
-            Long destinationId
+            Long destinationId,
+            List<ReservationStatus> statuses
     ) {
         return (root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
             predicates.add(cb.equal(root.get("user").get("id"), userId));
-            predicates.add(cb.equal(root.get("status"), ReservationStatus.COMPLETED));
+
+            if (statuses != null && !statuses.isEmpty()) {
+                predicates.add(root.get("status").in(statuses));
+            }
 
             if (fromDate != null) {
                 predicates.add(cb.greaterThanOrEqualTo(
