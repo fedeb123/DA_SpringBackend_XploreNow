@@ -3,7 +3,7 @@ package com.XploreNowAPI.SpringAPI.interfaces.rest;
 import com.XploreNowAPI.SpringAPI.application.dto.profile.ProfileResponseDto;
 import com.XploreNowAPI.SpringAPI.application.dto.profile.ReservationSummaryCounterDto;
 import com.XploreNowAPI.SpringAPI.application.service.ProfileService;
-import com.XploreNowAPI.SpringAPI.domain.model.enumtype.TravelPreferenceType;
+import com.XploreNowAPI.SpringAPI.domain.model.enumtype.ActivityCategory;
 import com.XploreNowAPI.SpringAPI.infrastructure.security.AppUserDetailsService;
 import com.XploreNowAPI.SpringAPI.infrastructure.security.JwtAuthenticationFilter;
 import com.XploreNowAPI.SpringAPI.infrastructure.security.JwtService;
@@ -51,7 +51,7 @@ class ProfileControllerTest {
                 "ana@example.com",
                 "+5491112345678",
                 "https://cdn.xplorenow.com/avatars/1.jpg",
-                List.of(TravelPreferenceType.ADVENTURE, TravelPreferenceType.CULTURE),
+                List.of(ActivityCategory.AVENTURA, ActivityCategory.CULTURA),
                 new ReservationSummaryCounterDto(2, 1, 5)
         );
 
@@ -60,6 +60,6 @@ class ProfileControllerTest {
         mockMvc.perform(get("/api/v1/profile"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.userId").value(1))
-                .andExpect(jsonPath("$.travelPreferences[0]").value("ADVENTURE"));
+                .andExpect(jsonPath("$.preferences[0]").value("AVENTURA"));
     }
 }
