@@ -3,6 +3,7 @@ package com.XploreNowAPI.SpringAPI.application.service;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -18,6 +19,7 @@ import com.XploreNowAPI.SpringAPI.application.dto.profile.UpdateProfileRequest;
 import com.XploreNowAPI.SpringAPI.application.dto.profile.UpdateTravelPreferencesRequest;
 import com.XploreNowAPI.SpringAPI.domain.model.entity.AppUser;
 import com.XploreNowAPI.SpringAPI.domain.model.entity.UserPreference;
+import com.XploreNowAPI.SpringAPI.domain.model.enumtype.ActivityCategory;
 import com.XploreNowAPI.SpringAPI.domain.model.enumtype.OtpPurpose;
 import com.XploreNowAPI.SpringAPI.domain.model.enumtype.ReservationStatus;
 import com.XploreNowAPI.SpringAPI.domain.model.enumtype.TravelPreferenceType;
@@ -52,7 +54,26 @@ public class ProfileService {
         user.setFirstName(request.firstName().trim());
         user.setLastName(request.lastName().trim());
         user.setPhone(request.phone() == null ? null : request.phone().trim());
-        user.setProfilePictureUrl(request.profilePictureUrl() == null ? null : request.profilePictureUrl().trim());
+        user.setProfilePictureUrl(
+                request.profilePictureUrl() == null
+                        ? null
+                        : request.profilePictureUrl().trim()
+        );
+
+        userPreferenceRepository.deleteByUserIdAndPreferredCategoryIsNotNull(user.getId());
+        userPreferenceRepository.flush();
+
+        Set<ActivityCategory> preferences =
+                request.preferences() == null ? Set.of() : request.preferences();
+
+        for (ActivityCategory category : preferences) {
+            UserPreference preference = UserPreference.builder()
+                    .user(user)
+                    .preferredCategory(category)
+                    .build();
+
+            userPreferenceRepository.save(preference);
+        }
 
         AppUser saved = appUserRepository.save(user);
         return toResponse(saved);
@@ -64,12 +85,15 @@ public class ProfileService {
 
         userPreferenceRepository.deleteByUserIdAndTravelPreferenceTypeIsNotNull(user.getId());
 
-        List<TravelPreferenceType> preferences = request.preferences() == null ? List.of() : request.preferences();
+        List<TravelPreferenceType> preferences =
+                request.preferences() == null ? List.of() : request.preferences();
+
         for (TravelPreferenceType preferenceType : preferences.stream().distinct().toList()) {
             UserPreference preference = UserPreference.builder()
                     .user(user)
                     .travelPreferenceType(preferenceType)
                     .build();
+
             userPreferenceRepository.save(preference);
         }
 
@@ -77,10 +101,10 @@ public class ProfileService {
     }
 
     private ProfileResponseDto toResponse(AppUser user) {
-        List<TravelPreferenceType> travelPreferences = userPreferenceRepository
-                .findByUserIdAndTravelPreferenceTypeIsNotNull(user.getId())
+        List<ActivityCategory> preferences = userPreferenceRepository
+                .findByUserIdAndPreferredCategoryIsNotNull(user.getId())
                 .stream()
-                .map(UserPreference::getTravelPreferenceType)
+                .map(UserPreference::getPreferredCategory)
                 .distinct()
                 .sorted(Comparator.comparing(Enum::name))
                 .toList();
@@ -98,7 +122,7 @@ public class ProfileService {
                 user.getEmail(),
                 user.getPhone(),
                 user.getProfilePictureUrl(),
-                travelPreferences,
+                preferences,
                 summary
         );
     }
@@ -124,10 +148,17 @@ public class ProfileService {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Email already in use");
         }
 
-        authService.verifyOtp(new OtpVerifyRequest(newEmail, request.code(), OtpPurpose.CHANGE_EMAIL));
+        authService.verifyOtp(
+                new OtpVerifyRequest(
+                        newEmail,
+                        request.code(),
+                        OtpPurpose.CHANGE_EMAIL
+                )
+        );
 
         user.setEmail(newEmail);
         appUserRepository.save(user);
+
         return getProfile();
     }
 
