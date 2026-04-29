@@ -9,6 +9,7 @@ BEGIN;
 DELETE FROM reservation_events;
 DELETE FROM ratings;
 DELETE FROM reservations;
+DELETE FROM news;
 DELETE FROM activity_itinerary;
 DELETE FROM otp_verifications;
 DELETE FROM user_preferences;
@@ -177,6 +178,33 @@ JOIN guides g ON TRUE
 JOIN users gu ON gu.id = g.user_id
 WHERE d.name = 'Bariloche Lagos' AND gu.email = 'guide.mza@xplorenow.test';
 
+-- News
+INSERT INTO news (
+  created_at, updated_at, title, short_description, full_description, image_url, active
+) VALUES
+(
+  NOW(), NOW(),
+  'Nueva temporada de experiencias urbanas',
+  '¡Ya estan disponibles nuevas salidas guiadas en el centro historico!',
+  'XploreNow lanza una nueva temporada de actividades urbanas con circuitos renovados, nuevos horarios y experiencias pensadas para viajeros que quieren descubrir la ciudad con una mirada local.',
+  'https://images.example.com/news/urban-season.jpg',
+  TRUE
+),
+(
+  NOW(), NOW(),
+  'Aventura de montana con cupos limitados',
+  'Se habilitaron salidas especiales en la cordillera para los proximos fines de semana.',
+  'Las excursiones de montana suman nuevas fechas con cupos limitados, ideal para quienes buscan naturaleza, fotografia y una experiencia completa de dia entero.',
+  'https://images.example.com/news/mountain-adventure.jpg',
+  TRUE
+),
+(NOW(), NOW(),
+  'Free tour dipsonible!',
+  'Ya se predispone de vacantes gratuitas para un paseo increible en nuestra casa principal',
+  'Descubriran nuestra cultura, historia, vision y mision, con el objetivo de que puedan ser parte de nosotros y conocernos mas.',
+  'https://images.example.com/news/casa.jpg',
+  TRUE
+);
 -- Schedules (future dates to ensure catalog has available data)
 INSERT INTO activity_schedules (
   created_at, updated_at, activity_id, start_date_time, end_date_time,
