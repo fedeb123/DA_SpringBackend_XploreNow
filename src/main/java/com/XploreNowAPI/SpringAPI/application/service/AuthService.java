@@ -169,6 +169,38 @@ public class AuthService {
         return buildAuthResponse(user);
     }
 
+    @Transactional
+    public AppUser verifyOtpAndGetUser(OtpVerifyRequest request) {
+        String normalizedEmail = normalizeEmail(request.email());
+
+        OtpVerification otp = otpRepository
+                .findTopByEmailIgnoreCaseAndPurposeAndStatusOrderByCreatedAtDesc(
+                        normalizedEmail,
+                        request.purpose(),
+                        OtpStatus.PENDING
+                )
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "No pending OTP for this email"));
+
+        validateOtpState(otp);
+
+        if (!passwordEncoder.matches(request.code(), otp.getCodeHash())) {
+            otp.setAttempts(otp.getAttempts() + 1);
+            if (otp.getAttempts() >= otp.getMaxAttempts()) {
+                otp.setStatus(OtpStatus.EXPIRED);
+            }
+            otpRepository.save(otp);
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid OTP code");
+        }
+
+        otp.setStatus(OtpStatus.CONSUMED);
+        otp.setVerifiedAt(LocalDateTime.now());
+        otpRepository.save(otp);
+
+        return Optional.ofNullable(otp.getUser())
+                .orElseGet(() -> userRepository.findByEmailIgnoreCase(normalizedEmail)
+                        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found")));
+    }
+
     private AuthResponse buildAuthResponse(AppUser user) {
         String token = jwtService.generateToken(user);
         return new AuthResponse(

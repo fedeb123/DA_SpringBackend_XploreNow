@@ -347,6 +347,44 @@ Todos los endpoints de perfil requieren JWT y usan el usuario autenticado del to
 - `PUT /api/v1/profile`: actualiza `firstName`, `lastName`, `phone`, `profilePictureUrl`.
 - `PUT /api/v1/profile/preferences`: reemplaza completamente preferencias de viaje.
 
+### 6.1 Cambio de contraseña (OTP)
+
+- Iniciar flujo (envía OTP al email registrado):
+
+  - Metodo: `POST`
+  - Endpoint: `/api/v1/profile/me/password-change/initiate`
+  - Auth requerida: Sí (Bearer JWT)
+
+  Response `200 OK` (sin body). OTP será registrado y enviado por el `OtpDeliveryService` (en desarrollo: `LoggingOtpDeliveryService`).
+
+- Confirmar cambio de contraseña:
+
+  - Metodo: `POST`
+  - Endpoint: `/api/v1/profile/me/password-change/confirm`
+  - Auth requerida: Sí (Bearer JWT)
+
+  Request example:
+
+  ```json
+  {
+    "code": "123456",
+    "newPassword": "NewP@ssw0rd"
+  }
+  ```
+
+  Response `200 OK`:
+
+  ```json
+  {
+    "message": "Password changed successfully"
+  }
+  ```
+
+Notes:
+- `code` debe ser el OTP enviado al email (6 dígitos).
+- `newPassword` debe cumplir con la validación mínima (8 caracteres).
+- El endpoint usa el usuario autenticado; el OTP se valida contra el email registrado.
+
 Request ejemplo para preferencias:
 
 ```json

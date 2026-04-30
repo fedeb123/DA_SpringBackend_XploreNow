@@ -11,6 +11,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import com.XploreNowAPI.SpringAPI.application.dto.auth.ChangeEmailRequest;
+import com.XploreNowAPI.SpringAPI.application.dto.auth.ChangePasswordRequest;
+import com.XploreNowAPI.SpringAPI.application.dto.auth.ChangePasswordResponse;
 import com.XploreNowAPI.SpringAPI.application.dto.auth.InitiateEmailChangeRequest;
 import com.XploreNowAPI.SpringAPI.application.dto.auth.OtpVerifyRequest;
 import com.XploreNowAPI.SpringAPI.application.dto.profile.ProfileResponseDto;
@@ -40,6 +42,7 @@ public class ProfileService {
     private final ReservationRepository reservationRepository;
     private final OtpVerificationRepository otpVerificationRepository;
     private final AuthService authService;
+    private final org.springframework.security.crypto.password.PasswordEncoder passwordEncoder;
 
     @Transactional(readOnly = true)
     public ProfileResponseDto getProfile() {
@@ -137,6 +140,31 @@ public class ProfileService {
         }
 
         authService.requestOtpForEmail(user, newEmail, OtpPurpose.CHANGE_EMAIL);
+    }
+
+    @Transactional
+    public void initiatePasswordChange() {
+        AppUser user = currentUserService.getCurrentUser();
+        authService.requestOtpForEmail(user, user.getEmail(), OtpPurpose.CHANGE_PASSWORD);
+    }
+
+    @Transactional
+    public ChangePasswordResponse confirmPasswordChange(ChangePasswordRequest request) {
+        AppUser user = currentUserService.getCurrentUser();
+
+        authService.verifyOtpAndGetUser(
+                new OtpVerifyRequest(
+                        user.getEmail(),
+                        request.code(),
+                        OtpPurpose.CHANGE_PASSWORD
+                )
+        );
+
+        // Validate new password further here if needed
+        user.setPasswordHash(passwordEncoder.encode(request.newPassword()));
+        appUserRepository.save(user);
+
+        return new ChangePasswordResponse("Password changed successfully");
     }
 
     @Transactional
