@@ -3,5 +3,6 @@ package com.XploreNowAPI.SpringAPI.domain.model.enumtype;
 public enum OtpPurpose {
     LOGIN,
     ACCESS_RECOVERY,
-    CHANGE_EMAIL
+    CHANGE_EMAIL,
+    CHANGE_PASSWORD
 }

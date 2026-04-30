@@ -10,6 +10,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.XploreNowAPI.SpringAPI.application.dto.auth.ChangeEmailRequest;
+import com.XploreNowAPI.SpringAPI.application.dto.auth.ChangePasswordRequest;
+import com.XploreNowAPI.SpringAPI.application.dto.auth.ChangePasswordResponse;
 import com.XploreNowAPI.SpringAPI.application.dto.auth.InitiateEmailChangeRequest;
 import com.XploreNowAPI.SpringAPI.application.dto.profile.ProfileResponseDto;
 import com.XploreNowAPI.SpringAPI.application.dto.profile.UpdateProfileRequest;
@@ -76,6 +78,17 @@ public class ProfileController {
         return ResponseEntity.ok().build();
     }
 
+    @PostMapping("/me/password-change/initiate")
+    @Operation(summary = "Iniciar cambio de contraseña", description = "Envía OTP al email registrado del usuario autenticado")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "OTP enviado"),
+            @ApiResponse(responseCode = "401", description = "No autenticado")
+    })
+    public ResponseEntity<Void> initiatePasswordChange() {
+        profileService.initiatePasswordChange();
+        return ResponseEntity.ok().build();
+    }
+
     @PostMapping("/me/email-change/confirm")
     @Operation(summary = "Confirmar cambio de email", description = "Verifica OTP y actualiza el email")
     @ApiResponses({
@@ -86,6 +99,18 @@ public class ProfileController {
     public ResponseEntity<ProfileResponseDto> confirmEmailChange(
             @Valid @RequestBody ChangeEmailRequest request) {
         return ResponseEntity.ok(profileService.confirmEmailChange(request));
+    }
+
+    @PostMapping("/me/password-change/confirm")
+    @Operation(summary = "Confirmar cambio de contraseña", description = "Verifica OTP y actualiza la contraseña del usuario autenticado")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Contraseña actualizada"),
+            @ApiResponse(responseCode = "400", description = "OTP invalido o expirado"),
+            @ApiResponse(responseCode = "401", description = "No autenticado")
+    })
+    public ResponseEntity<ChangePasswordResponse> confirmPasswordChange(
+            @Valid @RequestBody ChangePasswordRequest request) {
+        return ResponseEntity.ok(profileService.confirmPasswordChange(request));
     }
 
     @DeleteMapping("/me")
