@@ -2,6 +2,7 @@ package com.XploreNowAPI.SpringAPI.interfaces.rest;
 
 import com.XploreNowAPI.SpringAPI.application.dto.activity.ActivityDetailDto;
 import com.XploreNowAPI.SpringAPI.application.dto.activity.ActivitySummaryDto;
+import com.XploreNowAPI.SpringAPI.application.service.ActivityCommandService;
 import com.XploreNowAPI.SpringAPI.application.service.ActivityQueryService;
 import com.XploreNowAPI.SpringAPI.domain.model.enumtype.ActivityCategory;
 import com.XploreNowAPI.SpringAPI.domain.model.enumtype.ActivityLanguage;
@@ -12,11 +13,11 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.math.BigDecimal;
@@ -32,22 +33,19 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebMvcTest(ActivityController.class)
 @AutoConfigureMockMvc(addFilters = false)
 @ActiveProfiles("test")
+@MockitoBean(types = JwtAuthenticationFilter.class)
+@MockitoBean(types = JwtService.class)
+@MockitoBean(types = AppUserDetailsService.class)
 class ActivityControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
 
-    @MockBean
+    @MockitoBean
     private ActivityQueryService activityQueryService;
 
-    @MockBean
-    private JwtAuthenticationFilter jwtAuthenticationFilter;
-
-    @MockBean
-    private JwtService jwtService;
-
-    @MockBean
-    private AppUserDetailsService appUserDetailsService;
+    @MockitoBean
+    private ActivityCommandService activityCommandService;
 
     @Test
     void getCatalog_ReturnsPagedContent() throws Exception {
