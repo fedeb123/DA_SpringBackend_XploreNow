@@ -57,17 +57,17 @@ INSERT INTO destinations (
 (
   NOW(), NOW(), 'Buenos Aires Centro', 'Buenos Aires', 'Argentina',
   'Circuito urbano por casco historico, arquitectura y cultura local.',
-  'https://images.example.com/destinations/ba-centro.jpg', TRUE
+  'https://res.cloudinary.com/dj4j7srsg/image/upload/v1777650767/CENTRO_9_julio_big_yirbpc.jpg', TRUE
 ),
 (
   NOW(), NOW(), 'Mendoza Andes', 'Mendoza', 'Argentina',
   'Experiencias de montana, naturaleza y bodegas en la cordillera.',
-  'https://images.example.com/destinations/mendoza-andes.jpg', TRUE
+  'https://res.cloudinary.com/dj4j7srsg/image/upload/v1777650798/Gaucho-Day-2-1024x602_ztor6d.jpg', TRUE
 ),
 (
   NOW(), NOW(), 'Bariloche Lagos', 'San Carlos de Bariloche', 'Argentina',
   'Aventura, trekking y paisajes de lagos patagonicos.',
-  'https://images.example.com/destinations/bariloche-lagos.jpg', TRUE
+  'https://res.cloudinary.com/dj4j7srsg/image/upload/v1777650821/94_qeu9a9.jpg', TRUE
 );
 
 -- Guides
@@ -187,7 +187,7 @@ INSERT INTO news (
   'Nueva temporada de experiencias urbanas',
   '¡Ya estan disponibles nuevas salidas guiadas en el centro historico!',
   'XploreNow lanza una nueva temporada de actividades urbanas con circuitos renovados, nuevos horarios y experiencias pensadas para viajeros que quieren descubrir la ciudad con una mirada local.',
-  'https://images.example.com/news/urban-season.jpg',
+  'https://res.cloudinary.com/dj4j7srsg/image/upload/v1777650968/Science_cityplanning_541068522_z0luvw.jpg',
   TRUE
 ),
 (
@@ -195,14 +195,30 @@ INSERT INTO news (
   'Aventura de montana con cupos limitados',
   'Se habilitaron salidas especiales en la cordillera para los proximos fines de semana.',
   'Las excursiones de montana suman nuevas fechas con cupos limitados, ideal para quienes buscan naturaleza, fotografia y una experiencia completa de dia entero.',
-  'https://images.example.com/news/mountain-adventure.jpg',
+  'https://res.cloudinary.com/dj4j7srsg/image/upload/v1777649789/samples/landscapes/nature-mountains.jpg',
   TRUE
 ),
 (NOW(), NOW(),
   'Free tour dipsonible!',
   'Ya se predispone de vacantes gratuitas para un paseo increible en nuestra casa principal',
   'Descubriran nuestra cultura, historia, vision y mision, con el objetivo de que puedan ser parte de nosotros y conocernos mas.',
-  'https://images.example.com/news/casa.jpg',
+  'https://res.cloudinary.com/dj4j7srsg/image/upload/v1777650878/Congressional-Plaza-building-National-Congress-Buenos-Aires_lule9c.jpg',
+  TRUE
+),
+(
+  NOW(), NOW(),
+  'Descuento 2x1 en excursiones seleccionadas',
+  'Por tiempo limitado, hay descuento 2x1 en algunas actividades de fin de semana.',
+  'Aprovecha el descuento 2x1 en excursiones seleccionadas y disfruta mas experiencias con tu grupo, familia o amigos, por tiempo limitado.',
+  'https://res.cloudinary.com/dj4j7srsg/image/upload/v1777653697/2x1-red-half-price-commercial-tag-isolated_123447-1009_nkvas1.jpg',
+  FALSE
+),
+(
+  NOW(), NOW(),
+  'Nuevos destinos incorporados',
+  'Sumamos nuevas rutas y lugares para seguir explorando mas experiencias.',
+  'Incorporamos nuevos destinos a nuestro catalogo, con propuestas para quienes buscan paisajes, cultura local y actividades guiadas en lugares imperdibles.',
+  'https://res.cloudinary.com/dj4j7srsg/image/upload/v1777653732/nyc_shutterstock_1810675303_hq4tcb.webp',
   TRUE
 );
 -- Schedules (future dates to ensure catalog has available data)
@@ -234,14 +250,28 @@ FROM activities a;
 INSERT INTO activity_images (
   created_at, updated_at, activity_id, image_url, display_order
 )
-SELECT NOW(), NOW(), a.id, 'https://images.example.com/activities/' || a.id || '-1.jpg', 1
-FROM activities a;
+SELECT NOW(), NOW(), a.id,
+       CASE a.name
+         WHEN 'Free Tour Centro Historico' THEN 'https://res.cloudinary.com/dj4j7srsg/image/upload/v1777650402/minor_hotels_argentina_buenos_aires_ahy7mc.jpg'
+         WHEN 'Excursion Alta Montana' THEN 'https://res.cloudinary.com/dj4j7srsg/image/upload/v1777650596/excursion-privada-alta-montana_2196_202007211340160.Mobile_qbic74.jpg'
+         WHEN 'Aventura Kayak en Lago' THEN 'https://res.cloudinary.com/dj4j7srsg/image/upload/v1777650704/MBN-Minnewanka-Boat-Rentals-Kayaking.jpg_dol8aw.jpg'
+       END,
+       1
+FROM activities a
+WHERE a.name IN ('Free Tour Centro Historico', 'Excursion Alta Montana', 'Aventura Kayak en Lago');
 
 INSERT INTO activity_images (
   created_at, updated_at, activity_id, image_url, display_order
 )
-SELECT NOW(), NOW(), a.id, 'https://images.example.com/activities/' || a.id || '-2.jpg', 2
-FROM activities a;
+SELECT NOW(), NOW(), a.id,
+       CASE a.name
+         WHEN 'Free Tour Centro Historico' THEN 'https://res.cloudinary.com/dj4j7srsg/image/upload/v1777650480/centro-buenos-aires_ah0bac.jpg'
+         WHEN 'Excursion Alta Montana' THEN 'https://res.cloudinary.com/dj4j7srsg/image/upload/v1777650597/68_k4tiu8.jpg'
+         WHEN 'Aventura Kayak en Lago' THEN 'https://res.cloudinary.com/dj4j7srsg/image/upload/v1777650666/49_p6v3zs.jpg'
+       END,
+       2
+FROM activities a
+WHERE a.name IN ('Free Tour Centro Historico', 'Excursion Alta Montana', 'Aventura Kayak en Lago');
 
 -- Preferences (for featured endpoint)
 INSERT INTO user_preferences (
