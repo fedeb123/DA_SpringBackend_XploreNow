@@ -14,6 +14,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -23,6 +24,7 @@ import java.util.List;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -70,6 +72,14 @@ class HistoryControllerTest {
                 .andExpect(jsonPath("$.content[0].reservationId").value(50))
                 .andExpect(jsonPath("$.content[0].status").value("COMPLETED"))
                 .andExpect(jsonPath("$.content[0].hasRating").value(true));
+
+        verify(historyService).getHistory(
+                isNull(),
+                isNull(),
+                isNull(),
+                isNull(),
+                eq(PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "createdAt", "id")))
+        );
     }
 
     @Test

@@ -435,7 +435,7 @@ Notas:
 
 ## 8. Historial
 
-El historial corresponde a reservas del usuario autenticado. Por defecto devuelve todos los estados y permite filtrar por `status`.
+El historial corresponde a reservas del usuario autenticado. Por defecto devuelve todos los estados, permite filtrar por `status` y se ordena de ultimo agregado a primero agregado.
 
 - `GET /api/v1/activity/history?fromDate=&toDate=&destinationId=&status=&page=&size=`
 - `GET /api/v1/activity/history/{reservationId}`
