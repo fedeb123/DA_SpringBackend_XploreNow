@@ -173,9 +173,7 @@ public class ActivityQueryService {
                 .map(ActivityImage::getImageUrl)
                 .orElse(null);
 
-        Integer availableSpots = nextSchedule != null && nextSchedule.getAvailableSpots() != null
-                ? nextSchedule.getAvailableSpots()
-                : 0;
+        Integer availableSpots = getTotalAvailableSpots(activity.getId());
 
         boolean isFeatured = preferredCategories != null
                 && preferredCategories.contains(activity.getCategory());
@@ -208,5 +206,13 @@ public class ActivityQueryService {
                 );
 
         return schedules.stream().findFirst();
+    }
+
+    private Integer getTotalAvailableSpots(Long activityId) {
+        return activityScheduleRepository.findAvailableSchedulesFrom(activityId, LocalDateTime.now()).stream()
+                .map(ActivitySchedule::getAvailableSpots)
+                .filter(Objects::nonNull)
+                .mapToInt(Integer::intValue)
+                .sum();
     }
 }
