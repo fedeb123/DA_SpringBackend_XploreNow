@@ -33,7 +33,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 
-
 @RestController
 @RequestMapping("/api/v1/activities")
 @RequiredArgsConstructor
@@ -44,25 +43,43 @@ public class ActivityController {
     private final ActivityCommandService activityCommandService;
 
     @GetMapping
-        @Operation(summary = "Listado paginado de actividades", description = "Permite filtros combinados por destino, categoria, fecha y rango de precio")
+    @Operation(
+            summary = "Listado paginado de actividades",
+            description = "Permite filtros combinados por destino, categoria, fecha y rango de precio. Prioriza actividades segun preferencias del usuario si se envía userId"
+    )
     public ResponseEntity<Page<ActivitySummaryDto>> getCatalog(
             @Parameter(description = "ID del destino")
             @RequestParam(required = false) Long destinationId,
+
             @Parameter(description = "Categoria de actividad")
             @RequestParam(required = false) ActivityCategory category,
+
             @Parameter(description = "Fecha de la actividad (yyyy-MM-dd)")
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+            @RequestParam(required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+
             @Parameter(description = "Precio minimo")
             @RequestParam(required = false) BigDecimal minPrice,
+
             @Parameter(description = "Precio maximo")
             @RequestParam(required = false) BigDecimal maxPrice,
+
+            @Parameter(description = "ID del usuario para personalizar resultados")
+            @RequestParam(required = false) Long userId,
+
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "id") String sortBy,
             @RequestParam(defaultValue = "asc") String direction
     ) {
-        Sort.Direction sortDirection = "desc".equalsIgnoreCase(direction) ? Sort.Direction.DESC : Sort.Direction.ASC;
-        Pageable pageable = PageRequest.of(page, size, Sort.by(sortDirection, sortBy));
+        Sort.Direction sortDirection =
+                "desc".equalsIgnoreCase(direction) ? Sort.Direction.DESC : Sort.Direction.ASC;
+
+        Pageable pageable = PageRequest.of(
+                page,
+                size,
+                Sort.by(sortDirection, sortBy)
+        );
 
         ActivityFilterRequest filter = new ActivityFilterRequest(
                 destinationId,
@@ -72,32 +89,46 @@ public class ActivityController {
                 maxPrice
         );
 
-        return ResponseEntity.ok(activityQueryService.getCatalog(filter, pageable));
+        return ResponseEntity.ok(
+                activityQueryService.getCatalog(filter, pageable, userId)
+        );
     }
 
     @GetMapping("/{activityId}")
-    @Operation(summary = "Detalle de actividad", description = "Retorna descripcion, guia, punto de encuentro, politicas, cupos y galeria")
+    @Operation(
+            summary = "Detalle de actividad",
+            description = "Retorna descripcion, guia, punto de encuentro, politicas, cupos y galeria"
+    )
     public ResponseEntity<ActivityDetailDto> getDetail(@PathVariable Long activityId) {
-        return ResponseEntity.ok(activityQueryService.getActivityDetail(activityId));
+        return ResponseEntity.ok(
+                activityQueryService.getActivityDetail(activityId)
+        );
     }
 
     @GetMapping("/{activityId}/schedules")
-    @Operation(summary = "Horarios disponibles", description = "Retorna horarios futuros con cupos disponibles para una actividad")
-        @ApiResponses({
+    @Operation(
+            summary = "Horarios disponibles",
+            description = "Retorna horarios futuros con cupos disponibles para una actividad"
+    )
+    @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Horarios obtenidos"),
             @ApiResponse(responseCode = "404", description = "Actividad no encontrada")
-        })
+    })
     public ResponseEntity<ScheduleListResponseDto> getAvailableSchedules(
             @PathVariable Long activityId,
             @Parameter(description = "Fecha del horario (yyyy-MM-dd)")
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date
+            @RequestParam(required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date
     ) {
         var schedules = activityQueryService.getAvailableSchedules(activityId, date);
         return ResponseEntity.ok(new ScheduleListResponseDto(schedules));
     }
 
     @GetMapping("/featured")
-    @Operation(summary = "Actividades destacadas", description = "Obtiene actividades recomendadas segun preferencias de usuario")
+    @Operation(
+            summary = "Actividades destacadas",
+            description = "Obtiene actividades recomendadas segun preferencias de usuario"
+    )
     public ResponseEntity<Page<ActivitySummaryDto>> getFeatured(
             @Parameter(description = "ID del usuario")
             @RequestParam Long userId,
@@ -106,13 +137,25 @@ public class ActivityController {
             @RequestParam(defaultValue = "id") String sortBy,
             @RequestParam(defaultValue = "asc") String direction
     ) {
-        Sort.Direction sortDirection = "desc".equalsIgnoreCase(direction) ? Sort.Direction.DESC : Sort.Direction.ASC;
-        Pageable pageable = PageRequest.of(page, size, Sort.by(sortDirection, sortBy));
-        return ResponseEntity.ok(activityQueryService.getFeaturedForUser(userId, pageable));
+        Sort.Direction sortDirection =
+                "desc".equalsIgnoreCase(direction) ? Sort.Direction.DESC : Sort.Direction.ASC;
+
+        Pageable pageable = PageRequest.of(
+                page,
+                size,
+                Sort.by(sortDirection, sortBy)
+        );
+
+        return ResponseEntity.ok(
+                activityQueryService.getFeaturedForUser(userId, pageable)
+        );
     }
 
     @PutMapping("/{activityId}/meeting-point")
-    @Operation(summary = "Actualizar punto de encuentro", description = "Actualiza la dirección y coordenadas del punto de encuentro de una actividad")
+    @Operation(
+            summary = "Actualizar punto de encuentro",
+            description = "Actualiza la dirección y coordenadas del punto de encuentro de una actividad"
+    )
     @ApiResponses({
             @ApiResponse(responseCode = "204", description = "Punto de encuentro actualizado"),
             @ApiResponse(responseCode = "404", description = "Actividad no encontrada")

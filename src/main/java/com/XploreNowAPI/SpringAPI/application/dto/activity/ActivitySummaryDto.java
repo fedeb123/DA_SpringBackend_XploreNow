@@ -12,6 +12,7 @@ public record ActivitySummaryDto(
         ActivityCategory category,
         Integer durationMinutes,
         BigDecimal price,
-        Integer availableSpots
+        Integer availableSpots,
+        boolean featured
 ) {
 }

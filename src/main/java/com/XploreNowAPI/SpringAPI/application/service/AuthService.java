@@ -203,10 +203,12 @@ public class AuthService {
 
     private AuthResponse buildAuthResponse(AppUser user) {
         String token = jwtService.generateToken(user);
+
         return new AuthResponse(
                 token,
                 jwtService.getExpirationSeconds(),
                 "Bearer",
+                user.getId(),
                 user.getEmail(),
                 user.getFirstName() + " " + user.getLastName()
         );
