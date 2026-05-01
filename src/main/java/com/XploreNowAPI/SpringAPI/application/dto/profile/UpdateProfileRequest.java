@@ -20,8 +20,7 @@ public record UpdateProfileRequest(
         @Size(max = 30)
         String phone,
 
-        @Size(max = 500)
-        String profilePictureUrl,
+        String profilePhoto,
 
         Set<ActivityCategory> preferences
 
