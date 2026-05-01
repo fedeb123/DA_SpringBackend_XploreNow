@@ -1,7 +1,9 @@
 package com.XploreNowAPI.SpringAPI.interfaces.rest;
 
 import com.XploreNowAPI.SpringAPI.application.dto.activity.ActivityDetailDto;
+import com.XploreNowAPI.SpringAPI.application.dto.activity.ActivityFilterOptionsDto;
 import com.XploreNowAPI.SpringAPI.application.dto.activity.ActivitySummaryDto;
+import com.XploreNowAPI.SpringAPI.application.dto.activity.DestinationOptionDto;
 import com.XploreNowAPI.SpringAPI.application.service.ActivityCommandService;
 import com.XploreNowAPI.SpringAPI.application.service.ActivityQueryService;
 import com.XploreNowAPI.SpringAPI.domain.model.enumtype.ActivityCategory;
@@ -46,6 +48,22 @@ class ActivityControllerTest {
 
     @MockitoBean
     private ActivityCommandService activityCommandService;
+
+    @Test
+    void getFilterOptions_ReturnsDestinationsAndCategories() throws Exception {
+        ActivityFilterOptionsDto options = new ActivityFilterOptionsDto(
+                List.of(new DestinationOptionDto(1L, "Buenos Aires")),
+                List.of(ActivityCategory.CULTURA, ActivityCategory.AVENTURA)
+        );
+
+        when(activityQueryService.getFilterOptions()).thenReturn(options);
+
+        mockMvc.perform(get("/api/v1/activities/filter-options"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.destinations[0].destinationId").value(1))
+                .andExpect(jsonPath("$.destinations[0].name").value("Buenos Aires"))
+                .andExpect(jsonPath("$.categories[0]").value("CULTURA"));
+    }
 
     @Test
     void getCatalog_ReturnsPagedContent() throws Exception {
