@@ -10,6 +10,7 @@ import com.XploreNowAPI.SpringAPI.domain.model.entity.ActivityImage;
 import com.XploreNowAPI.SpringAPI.domain.model.entity.ActivitySchedule;
 import com.XploreNowAPI.SpringAPI.domain.model.entity.AppUser;
 import com.XploreNowAPI.SpringAPI.domain.model.entity.UserPreference;
+import com.XploreNowAPI.SpringAPI.domain.model.enumtype.ActivityCategory;
 import com.XploreNowAPI.SpringAPI.domain.repository.ActivityRepository;
 import com.XploreNowAPI.SpringAPI.domain.repository.ActivityScheduleRepository;
 import com.XploreNowAPI.SpringAPI.domain.repository.ActivityItineraryRepository;
@@ -18,6 +19,7 @@ import com.XploreNowAPI.SpringAPI.domain.repository.UserPreferenceRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,15 +28,14 @@ import org.springframework.web.server.ResponseStatusException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class ActivityQueryService {
 
-        private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm");
+    private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm");
 
     private final ActivityRepository activityRepository;
     private final ActivityScheduleRepository activityScheduleRepository;
@@ -43,9 +44,27 @@ public class ActivityQueryService {
     private final UserPreferenceRepository userPreferenceRepository;
 
     @Transactional(readOnly = true)
-    public Page<ActivitySummaryDto> getCatalog(ActivityFilterRequest filter, Pageable pageable) {
-        Page<Activity> page = activityRepository.findAll(ActivitySpecifications.byFilter(filter), pageable);
-        return page.map(this::toSummary);
+    public Page<ActivitySummaryDto> getCatalog(ActivityFilterRequest filter, Pageable pageable, Long userId) {
+
+        Page<Activity> page = activityRepository.findAll(
+                ActivitySpecifications.byFilter(filter),
+                pageable
+        );
+
+        Set<ActivityCategory> preferredCategories =
+                (userId != null)
+                        ? userPreferenceRepository.findByUserId(userId).stream()
+                        .map(UserPreference::getPreferredCategory)
+                        .filter(Objects::nonNull)
+                        .collect(Collectors.toSet())
+                        : Set.of();
+
+        List<ActivitySummaryDto> content = page.getContent().stream()
+                .map(activity -> toSummary(activity, preferredCategories))
+                .sorted(Comparator.comparing(ActivitySummaryDto::featured).reversed())
+                .toList();
+
+        return new PageImpl<>(content, pageable, page.getTotalElements());
     }
 
     @Transactional(readOnly = true)
@@ -97,12 +116,18 @@ public class ActivityQueryService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
 
         List<UserPreference> preferences = userPreferenceRepository.findByUserId(user.getId());
+
+        Set<ActivityCategory> preferredCategories = preferences.stream()
+                .map(UserPreference::getPreferredCategory)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
+
         Page<Activity> featured = activityRepository.findAll(
                 ActivitySpecifications.featuredByPreferences(preferences),
                 pageable
         );
 
-        return featured.map(this::toSummary);
+        return featured.map(activity -> toSummary(activity, preferredCategories));
     }
 
     @Transactional(readOnly = true)
@@ -112,24 +137,23 @@ public class ActivityQueryService {
         }
 
         LocalDateTime now = LocalDateTime.now();
-                List<ActivitySchedule> schedules;
+        List<ActivitySchedule> schedules;
 
-                if (date == null) {
-                        schedules = activityScheduleRepository.findAvailableSchedulesFrom(activityId, now);
-                } else {
+        if (date == null) {
+            schedules = activityScheduleRepository.findAvailableSchedulesFrom(activityId, now);
+        } else {
             LocalDateTime dayStart = date.atStartOfDay();
             LocalDateTime dayEnd = date.atTime(23, 59, 59);
-                        LocalDateTime from = dayStart.isAfter(now) ? dayStart : now;
+            LocalDateTime from = dayStart.isAfter(now) ? dayStart : now;
 
-                        if (dayEnd.isBefore(from)) {
+            if (dayEnd.isBefore(from)) {
                 return List.of();
             }
 
-                        schedules = activityScheduleRepository.findAvailableSchedulesBetween(activityId, from, dayEnd);
+            schedules = activityScheduleRepository.findAvailableSchedulesBetween(activityId, from, dayEnd);
         }
 
-                return schedules
-                .stream()
+        return schedules.stream()
                 .map(schedule -> new ScheduleSummaryDto(
                         schedule.getId(),
                         schedule.getStartDateTime().toLocalDate(),
@@ -140,7 +164,7 @@ public class ActivityQueryService {
                 .toList();
     }
 
-    private ActivitySummaryDto toSummary(Activity activity) {
+    private ActivitySummaryDto toSummary(Activity activity, Set<ActivityCategory> preferredCategories) {
         ActivitySchedule nextSchedule = getNextSchedule(activity.getId())
                 .orElse(null);
 
@@ -153,6 +177,16 @@ public class ActivityQueryService {
                 ? nextSchedule.getAvailableSpots()
                 : 0;
 
+        boolean isFeatured = preferredCategories != null
+                && preferredCategories.contains(activity.getCategory());
+
+        System.out.println(
+                "Activity: " + activity.getName()
+                        + " | category=" + activity.getCategory()
+                        + " | preferred=" + preferredCategories
+                        + " | match=" + preferredCategories.contains(activity.getCategory())
+        );
+
         return new ActivitySummaryDto(
                 activity.getId(),
                 image,
@@ -161,13 +195,17 @@ public class ActivityQueryService {
                 activity.getCategory(),
                 activity.getDurationMinutes(),
                 nextSchedule != null ? nextSchedule.getPrice() : activity.getBasePrice(),
-                nextSchedule != null ? nextSchedule.getAvailableSpots() : 0
+                availableSpots,
+                isFeatured
         );
     }
 
     private Optional<ActivitySchedule> getNextSchedule(Long activityId) {
         List<ActivitySchedule> schedules = activityScheduleRepository
-                .findByActivityIdAndStartDateTimeGreaterThanEqualOrderByStartDateTimeAsc(activityId, LocalDateTime.now());
+                .findByActivityIdAndStartDateTimeGreaterThanEqualOrderByStartDateTimeAsc(
+                        activityId,
+                        LocalDateTime.now()
+                );
 
         return schedules.stream().findFirst();
     }

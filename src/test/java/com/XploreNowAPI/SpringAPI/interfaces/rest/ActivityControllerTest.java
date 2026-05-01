@@ -20,7 +20,6 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.util.List;
 import java.util.Collections;
 
@@ -28,8 +27,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(ActivityController.class)
 @AutoConfigureMockMvc(addFilters = false)
@@ -42,14 +40,14 @@ class ActivityControllerTest {
     @MockBean
     private ActivityQueryService activityQueryService;
 
-        @MockBean
-        private JwtAuthenticationFilter jwtAuthenticationFilter;
+    @MockBean
+    private JwtAuthenticationFilter jwtAuthenticationFilter;
 
-        @MockBean
-        private JwtService jwtService;
+    @MockBean
+    private JwtService jwtService;
 
-        @MockBean
-        private AppUserDetailsService appUserDetailsService;
+    @MockBean
+    private AppUserDetailsService appUserDetailsService;
 
     @Test
     void getCatalog_ReturnsPagedContent() throws Exception {
@@ -61,18 +59,22 @@ class ActivityControllerTest {
                 ActivityCategory.CULTURA,
                 120,
                 BigDecimal.ZERO,
-                10
+                10,
+                false // <-- nuevo campo
         );
 
         Page<ActivitySummaryDto> page = new PageImpl<>(List.of(item), PageRequest.of(0, 10), 1);
-        when(activityQueryService.getCatalog(any(), any())).thenReturn(page);
+
+        when(activityQueryService.getCatalog(any(), any(), any()))
+                .thenReturn(page);
 
         mockMvc.perform(get("/api/v1/activities")
                         .queryParam("page", "0")
                         .queryParam("size", "10"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content[0].activityId").value(1))
-                .andExpect(jsonPath("$.content[0].category").value("CULTURA"));
+                .andExpect(jsonPath("$.content[0].category").value("CULTURA"))
+                .andExpect(jsonPath("$.content[0].featured").value(false));
     }
 
     @Test
@@ -117,17 +119,20 @@ class ActivityControllerTest {
                 ActivityCategory.AVENTURA,
                 180,
                 new BigDecimal("35000"),
-                8
+                8,
+                true // <-- nuevo campo
         );
 
         Page<ActivitySummaryDto> page = new PageImpl<>(List.of(item), PageRequest.of(0, 10), 1);
-        when(activityQueryService.getFeaturedForUser(eq(5L), any())).thenReturn(page);
+
+        when(activityQueryService.getFeaturedForUser(eq(5L), any()))
+                .thenReturn(page);
 
         mockMvc.perform(get("/api/v1/activities/featured")
                         .queryParam("userId", "5"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content[0].activityId").value(3))
-                .andExpect(jsonPath("$.content[0].category").value("AVENTURA"));
+                .andExpect(jsonPath("$.content[0].category").value("AVENTURA"))
+                .andExpect(jsonPath("$.content[0].featured").value(true));
     }
-
 }

@@ -29,7 +29,7 @@ class AuthControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
-        @MockBean
+    @MockBean
     private AuthService authService;
 
     @MockBean
@@ -43,7 +43,15 @@ class AuthControllerTest {
 
     @Test
     void register_ReturnsCreatedAndAuthPayload() throws Exception {
-        AuthResponse response = new AuthResponse("token-1", 7200L, "Bearer", "user@test.com", "Test User");
+        AuthResponse response = new AuthResponse(
+                "token-1",
+                7200L,
+                "Bearer",
+                1L, // <-- agregado
+                "user@test.com",
+                "Test User"
+        );
+
         when(authService.registerClassic(any())).thenReturn(response);
 
         String payload = """
@@ -66,7 +74,15 @@ class AuthControllerTest {
 
     @Test
     void login_ReturnsOkAndAuthPayload() throws Exception {
-        AuthResponse response = new AuthResponse("token-2", 7200L, "Bearer", "user@test.com", "Test User");
+        AuthResponse response = new AuthResponse(
+                "token-2",
+                7200L,
+                "Bearer",
+                1L, // <-- agregado
+                "user@test.com",
+                "Test User"
+        );
+
         when(authService.classicLogin(any())).thenReturn(response);
 
         String payload = """
@@ -85,7 +101,13 @@ class AuthControllerTest {
 
     @Test
     void requestOtp_ReturnsOkAndOtpChallengePayload() throws Exception {
-        OtpChallengeResponse response = new OtpChallengeResponse("user@test.com", "LOGIN", 600L, "OTP sent successfully");
+        OtpChallengeResponse response = new OtpChallengeResponse(
+                "user@test.com",
+                "LOGIN",
+                600L,
+                "OTP sent successfully"
+        );
+
         when(authService.requestOtp(any())).thenReturn(response);
 
         String payload = """
