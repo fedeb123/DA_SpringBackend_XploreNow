@@ -51,6 +51,7 @@ class ProfileControllerTest {
                 "ana@example.com",
                 "+5491112345678",
                 "https://cdn.xplorenow.com/avatars/1.jpg",
+                null, // profilePhoto (base64)
                 List.of(ActivityCategory.AVENTURA, ActivityCategory.CULTURA),
                 new ReservationSummaryCounterDto(2, 1, 5)
         );
