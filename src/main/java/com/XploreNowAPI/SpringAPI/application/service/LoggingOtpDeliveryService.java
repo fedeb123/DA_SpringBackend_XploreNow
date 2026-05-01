@@ -68,6 +68,7 @@ public class LoggingOtpDeliveryService implements OtpDeliveryService {
             case LOGIN -> "XploreNow - Codigo OTP de ingreso";
             case ACCESS_RECOVERY -> "XploreNow - Codigo OTP de recuperacion";
             case CHANGE_EMAIL -> "XploreNow - Codigo OTP para cambio de email";
+            case CHANGE_PASSWORD -> "XploreNow - Codigo OTP para cambiar la contrasena";
         };
     }
 
@@ -76,6 +77,7 @@ public class LoggingOtpDeliveryService implements OtpDeliveryService {
             case LOGIN -> "ingresar a tu cuenta";
             case ACCESS_RECOVERY -> "recuperar el acceso a tu cuenta";
             case CHANGE_EMAIL -> "confirmar el cambio de correo";
+            case CHANGE_PASSWORD -> "cambiar la contrasena";
         };
 
         return "Tu codigo OTP de XploreNow es: " + code + "\n\n"
