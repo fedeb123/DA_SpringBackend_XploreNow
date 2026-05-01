@@ -57,10 +57,10 @@ public class ProfileService {
         user.setFirstName(request.firstName().trim());
         user.setLastName(request.lastName().trim());
         user.setPhone(request.phone() == null ? null : request.phone().trim());
-        user.setProfilePictureUrl(
-                request.profilePictureUrl() == null
+        user.setProfilePhoto(
+                request.profilePhoto() == null
                         ? null
-                        : request.profilePictureUrl().trim()
+                        : request.profilePhoto().trim()
         );
 
         userPreferenceRepository.deleteByUserIdAndPreferredCategoryIsNotNull(user.getId());
@@ -125,6 +125,7 @@ public class ProfileService {
                 user.getEmail(),
                 user.getPhone(),
                 user.getProfilePictureUrl(),
+                user.getProfilePhoto(),
                 preferences,
                 summary
         );

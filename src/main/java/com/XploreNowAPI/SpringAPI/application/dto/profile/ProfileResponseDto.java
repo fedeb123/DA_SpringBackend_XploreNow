@@ -10,6 +10,7 @@ public record ProfileResponseDto(
         String email,
         String phone,
         String profilePictureUrl,
+        String profilePhoto,
         List<ActivityCategory> preferences,
         ReservationSummaryCounterDto reservationSummary
 ) {
