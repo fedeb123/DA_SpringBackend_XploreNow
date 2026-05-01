@@ -204,6 +204,22 @@ INSERT INTO news (
   'Descubriran nuestra cultura, historia, vision y mision, con el objetivo de que puedan ser parte de nosotros y conocernos mas.',
   'https://res.cloudinary.com/dj4j7srsg/image/upload/v1777650878/Congressional-Plaza-building-National-Congress-Buenos-Aires_lule9c.jpg',
   TRUE
+),
+(
+  NOW(), NOW(),
+  'Descuento 2x1 en excursiones seleccionadas',
+  'Por tiempo limitado, hay descuento 2x1 en algunas actividades de fin de semana.',
+  'Aprovecha el descuento 2x1 en excursiones seleccionadas y disfruta mas experiencias con tu grupo, familia o amigos, por tiempo limitado.',
+  'https://res.cloudinary.com/dj4j7srsg/image/upload/v1777653697/2x1-red-half-price-commercial-tag-isolated_123447-1009_nkvas1.jpg',
+  FALSE
+),
+(
+  NOW(), NOW(),
+  'Nuevos destinos incorporados',
+  'Sumamos nuevas rutas y lugares para seguir explorando mas experiencias.',
+  'Incorporamos nuevos destinos a nuestro catalogo, con propuestas para quienes buscan paisajes, cultura local y actividades guiadas en lugares imperdibles.',
+  'https://res.cloudinary.com/dj4j7srsg/image/upload/v1777653732/nyc_shutterstock_1810675303_hq4tcb.webp',
+  TRUE
 );
 -- Schedules (future dates to ensure catalog has available data)
 INSERT INTO activity_schedules (

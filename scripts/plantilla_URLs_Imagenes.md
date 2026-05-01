@@ -34,3 +34,13 @@ image_url: https://res.cloudinary.com/dj4j7srsg/image/upload/v1777649789/samples
 Free tour dipsonible!
 
 image_url: https://res.cloudinary.com/dj4j7srsg/image/upload/v1777650878/Congressional-Plaza-building-National-Congress-Buenos-Aires_lule9c.jpg
+
+NEWS - NUEVOS INSERTS
+
+Descuento 2x1 en excursiones seleccionadas
+
+image_url: https://res.cloudinary.com/dj4j7srsg/image/upload/v1777653697/2x1-red-half-price-commercial-tag-isolated_123447-1009_nkvas1.jpg
+
+Nuevos destinos incorporados
+
+image_url: https://res.cloudinary.com/dj4j7srsg/image/upload/v1777653732/nyc_shutterstock_1810675303_hq4tcb.webp
