@@ -199,7 +199,7 @@ INSERT INTO news (
   TRUE
 ),
 (NOW(), NOW(),
-  'Free tour dipsonible!',
+  'Free tour disponible!',
   'Ya se predispone de vacantes gratuitas para un paseo increible en nuestra casa principal',
   'Descubriran nuestra cultura, historia, vision y mision, con el objetivo de que puedan ser parte de nosotros y conocernos mas.',
   'https://res.cloudinary.com/dj4j7srsg/image/upload/v1777650878/Congressional-Plaza-building-National-Congress-Buenos-Aires_lule9c.jpg',
