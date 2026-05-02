@@ -1,10 +1,12 @@
 package com.XploreNowAPI.SpringAPI.application.service;
 
 import com.XploreNowAPI.SpringAPI.application.dto.activity.ActivityDetailDto;
+import com.XploreNowAPI.SpringAPI.application.dto.activity.ActivityFilterOptionsDto;
 import com.XploreNowAPI.SpringAPI.application.dto.activity.ActivityFilterRequest;
 import com.XploreNowAPI.SpringAPI.application.dto.activity.ScheduleSummaryDto;
 import com.XploreNowAPI.SpringAPI.application.dto.activity.ActivitySummaryDto;
 import com.XploreNowAPI.SpringAPI.application.dto.activity.ActivityItineraryDto;
+import com.XploreNowAPI.SpringAPI.application.dto.activity.DestinationOptionDto;
 import com.XploreNowAPI.SpringAPI.domain.model.entity.Activity;
 import com.XploreNowAPI.SpringAPI.domain.model.entity.ActivityImage;
 import com.XploreNowAPI.SpringAPI.domain.model.entity.ActivitySchedule;
@@ -15,6 +17,7 @@ import com.XploreNowAPI.SpringAPI.domain.repository.ActivityRepository;
 import com.XploreNowAPI.SpringAPI.domain.repository.ActivityScheduleRepository;
 import com.XploreNowAPI.SpringAPI.domain.repository.ActivityItineraryRepository;
 import com.XploreNowAPI.SpringAPI.domain.repository.AppUserRepository;
+import com.XploreNowAPI.SpringAPI.domain.repository.DestinationRepository;
 import com.XploreNowAPI.SpringAPI.domain.repository.UserPreferenceRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -41,7 +44,20 @@ public class ActivityQueryService {
     private final ActivityScheduleRepository activityScheduleRepository;
     private final ActivityItineraryRepository activityItineraryRepository;
     private final AppUserRepository appUserRepository;
+    private final DestinationRepository destinationRepository;
     private final UserPreferenceRepository userPreferenceRepository;
+
+    @Transactional(readOnly = true)
+    public ActivityFilterOptionsDto getFilterOptions() {
+        List<DestinationOptionDto> destinations = destinationRepository.findByActiveTrueOrderByNameAsc().stream()
+                .map(destination -> new DestinationOptionDto(destination.getId(), destination.getName()))
+                .toList();
+
+        return new ActivityFilterOptionsDto(
+                destinations,
+                Arrays.asList(ActivityCategory.values())
+        );
+    }
 
     @Transactional(readOnly = true)
     public Page<ActivitySummaryDto> getCatalog(ActivityFilterRequest filter, Pageable pageable, Long userId) {

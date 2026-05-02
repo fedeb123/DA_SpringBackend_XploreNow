@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.XploreNowAPI.SpringAPI.application.dto.activity.ActivityDetailDto;
+import com.XploreNowAPI.SpringAPI.application.dto.activity.ActivityFilterOptionsDto;
 import com.XploreNowAPI.SpringAPI.application.dto.activity.ActivityFilterRequest;
 import com.XploreNowAPI.SpringAPI.application.dto.activity.ActivitySummaryDto;
 import com.XploreNowAPI.SpringAPI.application.dto.activity.ScheduleListResponseDto;
@@ -41,6 +42,15 @@ public class ActivityController {
 
     private final ActivityQueryService activityQueryService;
     private final ActivityCommandService activityCommandService;
+
+    @GetMapping("/filter-options")
+    @Operation(
+            summary = "Opciones para filtros de catálogo",
+            description = "Retorna destinos y categorias disponibles para filtrar actividades en la Home"
+    )
+    public ResponseEntity<ActivityFilterOptionsDto> getFilterOptions() {
+        return ResponseEntity.ok(activityQueryService.getFilterOptions());
+    }
 
     @GetMapping
     @Operation(
