@@ -339,6 +339,93 @@ Query params:
 
 Response: `Page<ActivitySummaryDto>`.
 
+## 5.5 Validar estado de actividades favoritas (Batch Check)
+
+- Metodo: `GET`
+- Endpoint: `/api/v1/activities/saved-activities/batch`
+- Auth requerida: Si (Bearer JWT)
+
+**Purpose**: Endpoint diseñado para que el frontend consulte periódicamente el estado actual (precio y cupos disponibles) de un batch de actividades guardadas como favoritas en el cliente. El frontend compara este estado con su cache local para detectar cambios y mostrar un indicador visual de novedad.
+
+Query params:
+
+- `ids` (requerido, string con IDs separados por coma): `ids=10,15,22`
+
+Ejemplo:
+
+```http
+GET /api/v1/activities/saved-activities/batch?ids=10,15,22
+Authorization: Bearer <token>
+```
+
+Response `200 OK`: Array de `SavedActivityCheckDto`
+
+```json
+[
+  {
+    "activityId": 10,
+    "price": 0,
+    "availableSpots": 25,
+    "currency": "ARS"
+  },
+  {
+    "activityId": 15,
+    "price": 1500,
+    "availableSpots": 8,
+    "currency": "ARS"
+  },
+  {
+    "activityId": 22,
+    "price": 2500,
+    "availableSpots": 0,
+    "currency": "ARS"
+  }
+]
+```
+
+**Notas de integración frontend**:
+
+- **Worker periódico**: Recomendación implementar un `setInterval()` o similar que llame a este endpoint cada 5-10 minutos (según necesidad de reactividad).
+- **Batch size**: No hay límite técnico, pero se recomienda enviar máximo 50 IDs por request para optimizar la BD.
+- **Comparación local**: El endpoint devuelve el estado actual. Es responsabilidad del frontend comparar con su cache local de favoritas y detectar cambios en `price` o `availableSpots`.
+- **Indicador visual**: Si detecta cambio, mostrar badge/badge notificación en la actividad.
+- **IDs inválidos**: Si se envía un ID que no existe, simplemente se omite de la respuesta (no genera error).
+
+**Flujo recomendado en frontend**:
+
+```javascript
+// 1. Obtener IDs de actividades favoritas (del localStorage o state local)
+const favoriteIds = [10, 15, 22];
+
+// 2. Cada 5 minutos, consultar estado actual
+setInterval(async () => {
+  const response = await fetch(
+    `/api/v1/activities/saved-activities/batch?ids=${favoriteIds.join(',')}`,
+    { headers: { Authorization: `Bearer ${token}` } }
+  );
+  const currentState = await response.json();
+
+  // 3. Comparar con estado guardado localmente
+  currentState.forEach(activity => {
+    const saved = favoriteState[activity.activityId];
+    if (saved) {
+      const priceChanged = saved.price !== activity.price;
+      const spotsChanged = saved.availableSpots !== activity.availableSpots;
+      
+      if (priceChanged || spotsChanged) {
+        // Mostrar indicador de novedad en la actividad
+        showBadge(activity.activityId, 'Updated');
+      }
+    }
+  });
+
+  // 4. Actualizar cache local
+  favoriteState = Object.fromEntries(
+    currentState.map(a => [a.activityId, a])
+  );
+}, 5 * 60 * 1000); // 5 minutos
+```
+
 ## 6. Perfil del viajero
 
 Todos los endpoints de perfil requieren JWT y usan el usuario autenticado del token.

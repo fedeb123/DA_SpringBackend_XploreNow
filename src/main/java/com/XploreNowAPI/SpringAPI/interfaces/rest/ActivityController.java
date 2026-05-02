@@ -2,6 +2,8 @@ package com.XploreNowAPI.SpringAPI.interfaces.rest;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.Arrays;
+import java.util.List;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -21,10 +23,11 @@ import com.XploreNowAPI.SpringAPI.application.dto.activity.ActivityDetailDto;
 import com.XploreNowAPI.SpringAPI.application.dto.activity.ActivityFilterOptionsDto;
 import com.XploreNowAPI.SpringAPI.application.dto.activity.ActivityFilterRequest;
 import com.XploreNowAPI.SpringAPI.application.dto.activity.ActivitySummaryDto;
+import com.XploreNowAPI.SpringAPI.application.dto.activity.SavedActivityCheckDto;
 import com.XploreNowAPI.SpringAPI.application.dto.activity.ScheduleListResponseDto;
 import com.XploreNowAPI.SpringAPI.application.dto.activity.UpdateMeetingPointRequest;
-import com.XploreNowAPI.SpringAPI.application.service.ActivityQueryService;
 import com.XploreNowAPI.SpringAPI.application.service.ActivityCommandService;
+import com.XploreNowAPI.SpringAPI.application.service.ActivityQueryService;
 import com.XploreNowAPI.SpringAPI.domain.model.enumtype.ActivityCategory;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -159,6 +162,27 @@ public class ActivityController {
         return ResponseEntity.ok(
                 activityQueryService.getFeaturedForUser(userId, pageable)
         );
+    }
+
+    @GetMapping("/saved-activities/batch")
+    @Operation(
+            summary = "Validar estado de actividades favoritas",
+            description = "Retorna el estado actual (precio y cupos disponibles) de un batch de actividades favoritas. Diseñado para ser consultado periódicamente desde el frontend para detectar cambios de precio o disponibilidad"
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Estado actual de actividades obtenido"),
+            @ApiResponse(responseCode = "400", description = "Lista de IDs vacía")
+    })
+    public ResponseEntity<List<SavedActivityCheckDto>> getSavedActivitiesCheck(
+            @Parameter(description = "IDs de actividades a validar (comma-separated o array)")
+            @RequestParam String ids
+    ) {
+        List<Long> activityIds = Arrays.stream(ids.split(","))
+                .map(String::trim)
+                .map(Long::parseLong)
+                .toList();
+
+        return ResponseEntity.ok(activityQueryService.getSavedActivitiesCheck(activityIds));
     }
 
     @PutMapping("/{activityId}/meeting-point")
