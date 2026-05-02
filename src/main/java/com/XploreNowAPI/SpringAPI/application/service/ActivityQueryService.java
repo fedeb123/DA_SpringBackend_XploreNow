@@ -1,38 +1,47 @@
 package com.XploreNowAPI.SpringAPI.application.service;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
+
 import com.XploreNowAPI.SpringAPI.application.dto.activity.ActivityDetailDto;
 import com.XploreNowAPI.SpringAPI.application.dto.activity.ActivityFilterOptionsDto;
 import com.XploreNowAPI.SpringAPI.application.dto.activity.ActivityFilterRequest;
-import com.XploreNowAPI.SpringAPI.application.dto.activity.ScheduleSummaryDto;
-import com.XploreNowAPI.SpringAPI.application.dto.activity.ActivitySummaryDto;
 import com.XploreNowAPI.SpringAPI.application.dto.activity.ActivityItineraryDto;
+import com.XploreNowAPI.SpringAPI.application.dto.activity.ActivitySummaryDto;
 import com.XploreNowAPI.SpringAPI.application.dto.activity.DestinationOptionDto;
+import com.XploreNowAPI.SpringAPI.application.dto.activity.SavedActivityCheckDto;
+import com.XploreNowAPI.SpringAPI.application.dto.activity.ScheduleSummaryDto;
 import com.XploreNowAPI.SpringAPI.domain.model.entity.Activity;
 import com.XploreNowAPI.SpringAPI.domain.model.entity.ActivityImage;
 import com.XploreNowAPI.SpringAPI.domain.model.entity.ActivitySchedule;
 import com.XploreNowAPI.SpringAPI.domain.model.entity.AppUser;
 import com.XploreNowAPI.SpringAPI.domain.model.entity.UserPreference;
 import com.XploreNowAPI.SpringAPI.domain.model.enumtype.ActivityCategory;
+import com.XploreNowAPI.SpringAPI.domain.repository.ActivityItineraryRepository;
 import com.XploreNowAPI.SpringAPI.domain.repository.ActivityRepository;
 import com.XploreNowAPI.SpringAPI.domain.repository.ActivityScheduleRepository;
-import com.XploreNowAPI.SpringAPI.domain.repository.ActivityItineraryRepository;
 import com.XploreNowAPI.SpringAPI.domain.repository.AppUserRepository;
 import com.XploreNowAPI.SpringAPI.domain.repository.DestinationRepository;
 import com.XploreNowAPI.SpringAPI.domain.repository.UserPreferenceRepository;
-import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.http.HttpStatus;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.*;
-import java.util.stream.Collectors;
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
@@ -230,5 +239,29 @@ public class ActivityQueryService {
                 .filter(Objects::nonNull)
                 .mapToInt(Integer::intValue)
                 .sum();
+    }
+
+    @Transactional(readOnly = true)
+    public List<SavedActivityCheckDto> getSavedActivitiesCheck(List<Long> activityIds) {
+        if (activityIds == null || activityIds.isEmpty()) {
+            return List.of();
+        }
+
+        List<Activity> activities = activityRepository.findAllById(activityIds);
+
+        return activities.stream()
+                .map(activity -> {
+                    ActivitySchedule nextSchedule = getNextSchedule(activity.getId()).orElse(null);
+                    BigDecimal price = nextSchedule != null ? nextSchedule.getPrice() : activity.getBasePrice();
+                    Integer availableSpots = getTotalAvailableSpots(activity.getId());
+
+                    return new SavedActivityCheckDto(
+                            activity.getId(),
+                            price,
+                            availableSpots,
+                            activity.getCurrency()
+                    );
+                })
+                .toList();
     }
 }
