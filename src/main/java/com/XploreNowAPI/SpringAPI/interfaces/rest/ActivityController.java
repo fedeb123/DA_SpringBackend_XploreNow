@@ -24,6 +24,7 @@ import com.XploreNowAPI.SpringAPI.application.dto.activity.ActivityFilterOptions
 import com.XploreNowAPI.SpringAPI.application.dto.activity.ActivityFilterRequest;
 import com.XploreNowAPI.SpringAPI.application.dto.activity.ActivitySummaryDto;
 import com.XploreNowAPI.SpringAPI.application.dto.activity.SavedActivityCheckDto;
+import com.XploreNowAPI.SpringAPI.application.dto.activity.SavedActivityCheckResponseDto;
 import com.XploreNowAPI.SpringAPI.application.dto.activity.ScheduleListResponseDto;
 import com.XploreNowAPI.SpringAPI.application.dto.activity.UpdateMeetingPointRequest;
 import com.XploreNowAPI.SpringAPI.application.service.ActivityCommandService;
@@ -173,7 +174,7 @@ public class ActivityController {
             @ApiResponse(responseCode = "200", description = "Estado actual de actividades obtenido"),
             @ApiResponse(responseCode = "400", description = "Lista de IDs vacía")
     })
-    public ResponseEntity<List<SavedActivityCheckDto>> getSavedActivitiesCheck(
+    public ResponseEntity<SavedActivityCheckResponseDto> getSavedActivitiesCheck(
             @Parameter(description = "IDs de actividades a validar (comma-separated o array)")
             @RequestParam String ids
     ) {
@@ -182,7 +183,8 @@ public class ActivityController {
                 .map(Long::parseLong)
                 .toList();
 
-        return ResponseEntity.ok(activityQueryService.getSavedActivitiesCheck(activityIds));
+        List<SavedActivityCheckDto> activities = activityQueryService.getSavedActivitiesCheck(activityIds);
+        return ResponseEntity.ok(new SavedActivityCheckResponseDto(activities));
     }
 
     @PutMapping("/{activityId}/meeting-point")
