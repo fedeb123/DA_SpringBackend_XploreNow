@@ -259,6 +259,90 @@ Ejemplo de `content[]`:
 
 Response `200 OK` (`ActivityDetailDto`):
 
+## 12. Voucher digital y check-in por QR
+
+Este backend expone el voucher digital de una reserva y el flujo de check-in por QR para validar asistencia en el punto de encuentro.
+
+### 12.1 Obtener voucher digital
+
+- Metodo: `GET`
+- Endpoint: `/api/v1/reservations/{reservationId}/voucher`
+- Auth requerida: Si
+
+Reglas:
+
+- La reserva debe pertenecer al usuario autenticado.
+- Solo las reservas `CONFIRMED` o `COMPLETED` tienen voucher valido.
+
+Response `200 OK` (`VoucherDto`):
+
+```json
+{
+  "reservationId": 50,
+  "activityName": "Free Tour Centro Historico",
+  "date": "2026-05-10",
+  "time": "10:00",
+  "meetingPoint": "Plaza de Mayo",
+  "guideName": "Maria Perez",
+  "participantsCount": 2,
+  "reservationStatus": "CONFIRMED",
+  "checkedIn": false
+}
+```
+
+### 12.2 Generar código QR de check-in
+
+- Metodo: `GET`
+- Endpoint: `/api/v1/schedules/{scheduleId}/checkin-code`
+- Auth requerida: Si
+
+El QR se firma con HMAC y expira segun `checkin.qr.expiration-minutes`.
+
+Response `200 OK`:
+
+```json
+{
+  "scheduleId": 5,
+  "qrContent": "eyJzY2hlZHVsZUlkIjo1fQ.c2lnbmF0dXJl",
+  "expiresAt": "2026-05-10T13:00:00"
+}
+```
+
+### 12.3 Escanear QR y confirmar asistencia
+
+- Metodo: `POST`
+- Endpoint: `/api/v1/checkin/scan`
+- Auth requerida: Si
+
+Request:
+
+```json
+{
+  "reservationId": 50,
+  "qrContent": "eyJzY2hlZHVsZUlkIjo1fQ.c2lnbmF0dXJl"
+}
+```
+
+Response `200 OK`:
+
+```json
+{
+  "status": "CONFIRMED",
+  "reservationId": 50,
+  "activityName": "Free Tour Centro Historico",
+  "scannedAt": "2026-05-10T10:02:15",
+  "message": "Asistencia confirmada"
+}
+```
+
+Errores relevantes:
+
+- `422` si el QR es invalido o expiro.
+- `403` si la reserva no pertenece al usuario autenticado.
+- `409` si la reserva no esta confirmada o si la asistencia ya fue registrada.
+
+Nota: el punto de notificaciones push del TP se resuelve del lado de la app nativa usando la fecha/hora del voucher; no requiere backend adicional.
+
 ```json
 {
   "activityId": 10,

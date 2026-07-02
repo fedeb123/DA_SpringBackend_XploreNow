@@ -1,7 +1,9 @@
 package com.XploreNowAPI.SpringAPI.interfaces.rest;
 
 import com.XploreNowAPI.SpringAPI.application.dto.reservation.ReservationSummaryDto;
+import com.XploreNowAPI.SpringAPI.application.dto.reservation.VoucherDto;
 import com.XploreNowAPI.SpringAPI.application.service.ReservationService;
+import com.XploreNowAPI.SpringAPI.application.service.CheckInService;
 import com.XploreNowAPI.SpringAPI.domain.model.enumtype.ReservationStatus;
 import com.XploreNowAPI.SpringAPI.infrastructure.security.AppUserDetailsService;
 import com.XploreNowAPI.SpringAPI.infrastructure.security.JwtAuthenticationFilter;
@@ -10,11 +12,11 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
@@ -29,22 +31,19 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebMvcTest(ReservationController.class)
 @AutoConfigureMockMvc(addFilters = false)
 @ActiveProfiles("test")
+@MockitoBean(types = JwtAuthenticationFilter.class)
+@MockitoBean(types = JwtService.class)
+@MockitoBean(types = AppUserDetailsService.class)
 class ReservationControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
 
-    @MockBean
+        @MockitoBean
     private ReservationService reservationService;
 
-    @MockBean
-    private JwtAuthenticationFilter jwtAuthenticationFilter;
-
-    @MockBean
-    private JwtService jwtService;
-
-    @MockBean
-    private AppUserDetailsService appUserDetailsService;
+        @MockitoBean
+    private CheckInService checkInService;
 
     @Test
     void getMyReservations_ReturnsPagedReservations() throws Exception {
@@ -67,5 +66,27 @@ class ReservationControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content[0].reservationId").value(10))
                 .andExpect(jsonPath("$.content[0].voucherCode").value("XPLR-ABC123"));
+    }
+
+    @Test
+    void getVoucher_ReturnsVoucher() throws Exception {
+        VoucherDto voucher = new VoucherDto(
+                50L,
+                "Free Tour Centro Historico",
+                java.time.LocalDate.of(2026, 5, 10),
+                "10:00",
+                "Plaza de Mayo",
+                "Maria Perez",
+                2,
+                ReservationStatus.CONFIRMED,
+                true
+        );
+
+        when(checkInService.getVoucher(50L)).thenReturn(voucher);
+
+        mockMvc.perform(get("/api/v1/reservations/{reservationId}/voucher", 50L))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.reservationId").value(50))
+                .andExpect(jsonPath("$.checkedIn").value(true));
     }
 }

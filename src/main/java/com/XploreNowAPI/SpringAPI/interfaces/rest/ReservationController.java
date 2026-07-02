@@ -1,18 +1,5 @@
 package com.XploreNowAPI.SpringAPI.interfaces.rest;
 
-import com.XploreNowAPI.SpringAPI.application.dto.reservation.CancelReservationResponseDto;
-import com.XploreNowAPI.SpringAPI.application.dto.reservation.CreateReservationRequest;
-import com.XploreNowAPI.SpringAPI.application.dto.reservation.ReservationDetailDto;
-import com.XploreNowAPI.SpringAPI.application.dto.reservation.ReservationSummaryDto;
-import com.XploreNowAPI.SpringAPI.application.service.ReservationService;
-import com.XploreNowAPI.SpringAPI.domain.model.enumtype.ReservationStatus;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -28,6 +15,23 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.XploreNowAPI.SpringAPI.application.dto.reservation.CancelReservationResponseDto;
+import com.XploreNowAPI.SpringAPI.application.dto.reservation.CreateReservationRequest;
+import com.XploreNowAPI.SpringAPI.application.dto.reservation.ReservationDetailDto;
+import com.XploreNowAPI.SpringAPI.application.dto.reservation.ReservationSummaryDto;
+import com.XploreNowAPI.SpringAPI.application.dto.reservation.VoucherDto;
+import com.XploreNowAPI.SpringAPI.application.service.CheckInService;
+import com.XploreNowAPI.SpringAPI.application.service.ReservationService;
+import com.XploreNowAPI.SpringAPI.domain.model.enumtype.ReservationStatus;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+
 @RestController
 @RequestMapping("/api/v1/reservations")
 @RequiredArgsConstructor
@@ -35,6 +39,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class ReservationController {
 
     private final ReservationService reservationService;
+    private final CheckInService checkInService;
 
     @PostMapping
         @Operation(summary = "Crear reserva", description = "Confirma una reserva descontando cupos del schedule. El scheduleId debe obtenerse desde GET /api/v1/activities/{activityId}/schedules")
@@ -83,5 +88,17 @@ public class ReservationController {
     })
     public ResponseEntity<ReservationDetailDto> getReservationDetail(@PathVariable Long reservationId) {
         return ResponseEntity.ok(reservationService.getReservationDetail(reservationId));
+    }
+
+    @GetMapping("/{reservationId}/voucher")
+    @Operation(summary = "Obtener voucher digital", description = "Retorna el voucher digital de una reserva confirmada o completada")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Voucher obtenido"),
+            @ApiResponse(responseCode = "403", description = "Reserva de otro usuario"),
+            @ApiResponse(responseCode = "404", description = "Reserva no encontrada"),
+            @ApiResponse(responseCode = "409", description = "Reserva sin voucher válido en su estado actual")
+    })
+    public ResponseEntity<VoucherDto> getVoucher(@PathVariable Long reservationId) {
+        return ResponseEntity.ok(checkInService.getVoucher(reservationId));
     }
 }
