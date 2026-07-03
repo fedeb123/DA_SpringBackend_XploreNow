@@ -1,22 +1,10 @@
 package com.XploreNowAPI.SpringAPI.application.service;
 
-import com.XploreNowAPI.SpringAPI.application.dto.reservation.CancelReservationResponseDto;
-import com.XploreNowAPI.SpringAPI.application.dto.reservation.CreateReservationRequest;
-import com.XploreNowAPI.SpringAPI.application.dto.reservation.ReservationDetailDto;
-import com.XploreNowAPI.SpringAPI.application.dto.reservation.ReservationSummaryDto;
-import com.XploreNowAPI.SpringAPI.application.dto.activity.ActivityItineraryDto;
-import com.XploreNowAPI.SpringAPI.domain.model.entity.Activity;
-import com.XploreNowAPI.SpringAPI.domain.model.entity.ActivitySchedule;
-import com.XploreNowAPI.SpringAPI.domain.model.entity.AppUser;
-import com.XploreNowAPI.SpringAPI.domain.model.entity.Reservation;
-import com.XploreNowAPI.SpringAPI.domain.model.entity.ReservationEvent;
-import com.XploreNowAPI.SpringAPI.domain.model.enumtype.ReservationChangeType;
-import com.XploreNowAPI.SpringAPI.domain.model.enumtype.ReservationStatus;
-import com.XploreNowAPI.SpringAPI.domain.repository.ActivityScheduleRepository;
-import com.XploreNowAPI.SpringAPI.domain.repository.ActivityItineraryRepository;
-import com.XploreNowAPI.SpringAPI.domain.repository.ReservationEventRepository;
-import com.XploreNowAPI.SpringAPI.domain.repository.ReservationRepository;
-import lombok.RequiredArgsConstructor;
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.UUID;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -24,10 +12,26 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.UUID;
+import com.XploreNowAPI.SpringAPI.application.dto.activity.ActivityItineraryDto;
+import com.XploreNowAPI.SpringAPI.application.dto.reservation.CancelReservationResponseDto;
+import com.XploreNowAPI.SpringAPI.application.dto.reservation.CreateReservationRequest;
+import com.XploreNowAPI.SpringAPI.application.dto.reservation.ReservationDetailDto;
+import com.XploreNowAPI.SpringAPI.application.dto.reservation.ReservationSummaryDto;
+import com.XploreNowAPI.SpringAPI.domain.model.entity.Activity;
+import com.XploreNowAPI.SpringAPI.domain.model.entity.ActivitySchedule;
+import com.XploreNowAPI.SpringAPI.domain.model.entity.AppUser;
+import com.XploreNowAPI.SpringAPI.domain.model.entity.Reservation;
+import com.XploreNowAPI.SpringAPI.domain.model.entity.ReservationEvent;
+import com.XploreNowAPI.SpringAPI.domain.model.enumtype.CheckInStatus;
+import com.XploreNowAPI.SpringAPI.domain.model.enumtype.ReservationChangeType;
+import com.XploreNowAPI.SpringAPI.domain.model.enumtype.ReservationStatus;
+import com.XploreNowAPI.SpringAPI.domain.repository.ActivityItineraryRepository;
+import com.XploreNowAPI.SpringAPI.domain.repository.ActivityScheduleRepository;
+import com.XploreNowAPI.SpringAPI.domain.repository.CheckInRepository;
+import com.XploreNowAPI.SpringAPI.domain.repository.ReservationEventRepository;
+import com.XploreNowAPI.SpringAPI.domain.repository.ReservationRepository;
+
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
@@ -40,6 +44,7 @@ public class ReservationService {
     private final ActivityScheduleRepository activityScheduleRepository;
     private final ActivityItineraryRepository activityItineraryRepository;
     private final ReservationEventRepository reservationEventRepository;
+    private final CheckInRepository checkInRepository;
 
     @Transactional
     public ReservationDetailDto createReservation(CreateReservationRequest request) {
@@ -169,7 +174,8 @@ public class ReservationService {
                 activity.getMeetingPointLongitude(),
                 reservation.getTotalAmount(),
                 activity.getCancellationPolicy(),
-                itineraries
+                itineraries,
+                checkInRepository.existsByReservationIdAndStatus(reservation.getId(), CheckInStatus.CONFIRMED)
         );
     }
 

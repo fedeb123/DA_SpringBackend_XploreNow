@@ -4,8 +4,8 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
-import com.XploreNowAPI.SpringAPI.domain.model.enumtype.ReservationStatus;
 import com.XploreNowAPI.SpringAPI.application.dto.activity.ActivityItineraryDto;
+import com.XploreNowAPI.SpringAPI.domain.model.enumtype.ReservationStatus;
 
 public record ReservationDetailDto(
         Long reservationId,
@@ -21,7 +21,8 @@ public record ReservationDetailDto(
         Double meetingPointLongitude,
         BigDecimal totalPrice,
         String cancellationPolicy,
-        List<ActivityItineraryDto> itineraries
+        List<ActivityItineraryDto> itineraries,
+        boolean checkedIn
 ) {
 }
 
