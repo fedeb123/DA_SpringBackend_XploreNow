@@ -30,6 +30,8 @@ import com.XploreNowAPI.SpringAPI.domain.repository.ActivityScheduleRepository;
 import com.XploreNowAPI.SpringAPI.domain.repository.CheckInRepository;
 import com.XploreNowAPI.SpringAPI.domain.repository.ReservationEventRepository;
 import com.XploreNowAPI.SpringAPI.domain.repository.ReservationRepository;
+import com.XploreNowAPI.SpringAPI.application.service.NotificationService;
+import com.XploreNowAPI.SpringAPI.domain.model.enumtype.NotificationType;
 
 import lombok.RequiredArgsConstructor;
 
@@ -45,6 +47,7 @@ public class ReservationService {
     private final ActivityItineraryRepository activityItineraryRepository;
     private final ReservationEventRepository reservationEventRepository;
     private final CheckInRepository checkInRepository;
+    private final NotificationService notificationService;
 
     @Transactional
     public ReservationDetailDto createReservation(CreateReservationRequest request) {
@@ -106,6 +109,10 @@ public class ReservationService {
         activityScheduleRepository.save(schedule);
         Reservation saved = reservationRepository.save(reservation);
         saveEvent(saved, ReservationChangeType.CANCELLED, "Reserva cancelada por el usuario");
+
+        // crear notificación inmediata para el usuario
+        var payload = "Su reserva para '" + saved.getSchedule().getActivity().getName() + "' ha sido cancelada. Voucher: " + saved.getVoucherCode();
+        notificationService.createImmediate(saved.getUser(), saved, NotificationType.INFO, payload);
 
         return new CancelReservationResponseDto(
                 saved.getId(),
