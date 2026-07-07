@@ -221,14 +221,14 @@ INSERT INTO news (
   'https://res.cloudinary.com/dj4j7srsg/image/upload/v1777653732/nyc_shutterstock_1810675303_hq4tcb.webp',
   TRUE
 );
--- Schedules (future dates to ensure catalog has available data)
+-- Schedules (tomorrow at 21:00, 21:10 and 21:20 to test reminders)
 INSERT INTO activity_schedules (
   created_at, updated_at, activity_id, start_date_time, end_date_time,
   price, total_spots, reserved_spots
 )
 SELECT NOW(), NOW(), a.id,
-       NOW() + INTERVAL '2 days',
-       NOW() + INTERVAL '2 days 2 hours',
+       DATE_TRUNC('day', NOW() + INTERVAL '1 day') + INTERVAL '21 hours',
+       DATE_TRUNC('day', NOW() + INTERVAL '1 day') + INTERVAL '23 hours',
        CASE WHEN a.name = 'Free Tour Centro Historico' THEN 0 ELSE a.base_price END,
        30,
        5
@@ -239,11 +239,23 @@ INSERT INTO activity_schedules (
   price, total_spots, reserved_spots
 )
 SELECT NOW(), NOW(), a.id,
-       NOW() + INTERVAL '7 days',
-       NOW() + INTERVAL '7 days 3 hours',
+       DATE_TRUNC('day', NOW() + INTERVAL '1 day') + INTERVAL '21 hours 10 minutes',
+       DATE_TRUNC('day', NOW() + INTERVAL '1 day') + INTERVAL '23 hours 10 minutes',
        CASE WHEN a.name = 'Free Tour Centro Historico' THEN 0 ELSE a.base_price END,
        25,
        3
+FROM activities a;
+
+INSERT INTO activity_schedules (
+  created_at, updated_at, activity_id, start_date_time, end_date_time,
+  price, total_spots, reserved_spots
+)
+SELECT NOW(), NOW(), a.id,
+       DATE_TRUNC('day', NOW() + INTERVAL '1 day') + INTERVAL '21 hours 20 minutes',
+       DATE_TRUNC('day', NOW() + INTERVAL '1 day') + INTERVAL '23 hours 20 minutes',
+       CASE WHEN a.name = 'Free Tour Centro Historico' THEN 0 ELSE a.base_price END,
+       20,
+       2
 FROM activities a;
 
 -- Activity images
@@ -325,6 +337,21 @@ JOIN activities a ON a.id = s.activity_id
 WHERE u.email = 'traveler1@xplorenow.test'
   AND a.name = 'Aventura Kayak en Lago'
   AND s.start_date_time > NOW()
+ORDER BY s.start_date_time
+LIMIT 1;
+
+-- Extra reservation tied to the tomorrow schedule for reminder testing
+INSERT INTO reservations (
+  created_at, updated_at, user_id, schedule_id, seats, total_amount, status, voucher_code, cancelled_at
+)
+SELECT NOW(), NOW(), u.id, s.id, 1, s.price, 'CONFIRMED', 'XPLR-SEED004', NULL
+FROM users u
+JOIN activity_schedules s ON TRUE
+JOIN activities a ON a.id = s.activity_id
+WHERE u.email = 'traveler1@xplorenow.test'
+  AND a.name = 'Free Tour Centro Historico'
+  AND s.start_date_time >= DATE_TRUNC('day', NOW() + INTERVAL '1 day') + INTERVAL '21 hours'
+  AND s.start_date_time < DATE_TRUNC('day', NOW() + INTERVAL '1 day') + INTERVAL '22 hours'
 ORDER BY s.start_date_time
 LIMIT 1;
 
