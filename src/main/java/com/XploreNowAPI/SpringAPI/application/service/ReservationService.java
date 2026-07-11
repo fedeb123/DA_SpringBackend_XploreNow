@@ -20,6 +20,7 @@ import com.XploreNowAPI.SpringAPI.application.dto.reservation.ReservationSummary
 import com.XploreNowAPI.SpringAPI.domain.model.entity.Activity;
 import com.XploreNowAPI.SpringAPI.domain.model.entity.ActivitySchedule;
 import com.XploreNowAPI.SpringAPI.domain.model.entity.AppUser;
+import com.XploreNowAPI.SpringAPI.domain.model.entity.GuideProfile;
 import com.XploreNowAPI.SpringAPI.domain.model.entity.Reservation;
 import com.XploreNowAPI.SpringAPI.domain.model.entity.ReservationEvent;
 import com.XploreNowAPI.SpringAPI.domain.model.enumtype.CheckInStatus;
@@ -135,7 +136,7 @@ public class ReservationService {
     @Transactional(readOnly = true)
     public ReservationDetailDto getReservationDetail(Long reservationId) {
         AppUser user = currentUserService.getCurrentUser();
-        Reservation reservation = reservationRepository.findById(reservationId)
+        Reservation reservation = reservationRepository.findDetailById(reservationId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Reservation not found"));
 
         if (!reservation.getUser().getId().equals(user.getId())) {
@@ -181,9 +182,40 @@ public class ReservationService {
                 activity.getMeetingPointLongitude(),
                 reservation.getTotalAmount(),
                 activity.getCancellationPolicy(),
+                buildGuideName(activity),
                 itineraries,
                 checkInRepository.existsByReservationIdAndStatus(reservation.getId(), CheckInStatus.CONFIRMED)
         );
+    }
+
+    private String buildGuideName(Activity activity) {
+        if (activity == null || activity.getGuide() == null) {
+            return null;
+        }
+
+        GuideProfile guide = activity.getGuide();
+        AppUser guideUser = guide.getUser();
+        if (guideUser == null) {
+            return null;
+        }
+
+        String firstName = normalizeNamePart(guideUser.getFirstName());
+        String lastName = normalizeNamePart(guideUser.getLastName());
+        String fullName = String.join(" ",
+                firstName != null ? firstName : "",
+                lastName != null ? lastName : ""
+        ).trim();
+
+        return fullName.isEmpty() ? null : fullName;
+    }
+
+    private String normalizeNamePart(String value) {
+        if (value == null) {
+            return null;
+        }
+
+        String trimmed = value.trim();
+        return trimmed.isEmpty() ? null : trimmed;
     }
 
     private String generateVoucherCode() {

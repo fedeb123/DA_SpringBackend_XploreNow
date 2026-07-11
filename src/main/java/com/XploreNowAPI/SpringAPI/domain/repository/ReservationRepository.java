@@ -6,6 +6,7 @@ import java.util.Optional;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Modifying;
@@ -58,6 +59,17 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long>,
     void deleteAllByUser(AppUser user);
     
     Optional<Reservation> findByIdAndUserId(Long reservationId, Long userId);
+
+    @EntityGraph(attributePaths = {
+            "user",
+            "schedule",
+            "schedule.activity",
+            "schedule.activity.destination",
+            "schedule.activity.guide",
+            "schedule.activity.guide.user"
+    })
+    @Query("select r from Reservation r where r.id = :reservationId")
+    Optional<Reservation> findDetailById(@Param("reservationId") Long reservationId);
 
     Page<Reservation> findByUserId(Long userId, Pageable pageable);
 
