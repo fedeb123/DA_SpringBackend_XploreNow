@@ -21,6 +21,7 @@ public record ReservationDetailDto(
         Double meetingPointLongitude,
         BigDecimal totalPrice,
         String cancellationPolicy,
+        String guideName,
         List<ActivityItineraryDto> itineraries,
         boolean checkedIn
 ) {
