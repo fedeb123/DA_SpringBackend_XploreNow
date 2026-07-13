@@ -8,6 +8,8 @@ BEGIN;
 -- Clean tables (child to parent)
 DELETE FROM reservation_events;
 DELETE FROM ratings;
+DELETE FROM notifications;
+DELETE FROM check_ins;
 DELETE FROM reservations;
 DELETE FROM news;
 DELETE FROM activity_itinerary;
@@ -401,6 +403,38 @@ INSERT INTO reservation_events (
 SELECT NOW(), NOW(), r.id, 'CONFIRMED', NOW(), 'Reserva extra para pruebas de cancelacion'
 FROM reservations r
 WHERE r.voucher_code = 'XPLR-SEED003';
+
+-- Notifications sample (pending and scheduled)
+-- Pending notification tied to an existing reservation
+INSERT INTO notifications (
+  created_at, updated_at, user_id, reservation_id, type, status, payload, deliver_at
+)
+SELECT NOW(), NOW(), u.id, r.id, 'REMINDER', 'PENDING',
+       'Recordatorio: tu actividad "' || a.name || '" es en 24 horas. Voucher: ' || r.voucher_code,
+       s.start_date_time - INTERVAL '24 hours'
+FROM users u
+JOIN reservations r ON r.user_id = u.id
+JOIN activity_schedules s ON s.id = r.schedule_id
+JOIN activities a ON a.id = s.activity_id
+WHERE u.email = 'traveler1@xplorenow.test'
+  AND r.voucher_code = 'XPLR-SEED001';
+
+
+-- Immediate info notification (delivered) for admin
+INSERT INTO notifications (
+  created_at, updated_at, user_id, reservation_id, type, status, payload, delivered_at
+)
+SELECT NOW(), NOW(), u.id, NULL, 'INFO', 'DELIVERED', 'Notificacion de bienvenida para testing', NOW()
+FROM users u
+WHERE u.email = 'admin@xplorenow.test';
+
+-- Check-in sample for a past reservation
+INSERT INTO check_ins (
+  created_at, updated_at, reservation_id, schedule_id, status, scanned_at
+)
+SELECT NOW() - INTERVAL '6 days', NOW() - INTERVAL '6 days', r.id, r.schedule_id, 'CONFIRMED', NOW() - INTERVAL '6 days'
+FROM reservations r
+WHERE r.voucher_code = 'XPLR-SEED002';
 
 -- Activity Itineraries (Puntos del recorrido)
 -- Free Tour Centro Historico de Buenos Aires
