@@ -24,8 +24,8 @@ public class NotificationScheduler {
     private final NotificationRepository notificationRepository;
     private final NotificationService notificationService;
 
-    // Run every hour to schedule reminders 24h before start
-    @Scheduled(fixedDelayString = "PT1H")
+    // Corre segun lo que diga app properties
+    @Scheduled(fixedDelayString = "${notifications.reminder-sweep-interval}")
     @Transactional
     public void schedule24hReminders() {
         LocalDateTime from = LocalDateTime.now().plusHours(23).plusMinutes(30);
