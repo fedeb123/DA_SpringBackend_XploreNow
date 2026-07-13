@@ -18,6 +18,8 @@ import org.springframework.web.bind.annotation.RestController;
 import com.XploreNowAPI.SpringAPI.application.dto.reservation.CancelActivityResponseDto;
 import com.XploreNowAPI.SpringAPI.application.dto.reservation.CancelReservationResponseDto;
 import com.XploreNowAPI.SpringAPI.application.dto.reservation.CreateReservationRequest;
+import com.XploreNowAPI.SpringAPI.application.dto.reservation.RescheduleActivityRequest;
+import com.XploreNowAPI.SpringAPI.application.dto.reservation.RescheduleActivityResponseDto;
 import com.XploreNowAPI.SpringAPI.application.dto.reservation.ReservationDetailDto;
 import com.XploreNowAPI.SpringAPI.application.dto.reservation.ReservationSummaryDto;
 import com.XploreNowAPI.SpringAPI.application.dto.reservation.VoucherDto;
@@ -73,6 +75,19 @@ public class ReservationController {
     })
     public ResponseEntity<CancelActivityResponseDto> cancelActivityReservations(@PathVariable Long scheduleId) {
         return ResponseEntity.ok(reservationService.cancelActivityReservations(scheduleId));
+    }
+
+    @PostMapping("/activities/{scheduleId}/reschedule")
+    @Operation(summary = "Reprogramar actividad para todos los inscritos", description = "Actualiza el horario de un schedule y notifica a todos los usuarios con reservas confirmadas")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Actividad reprogramada"),
+            @ApiResponse(responseCode = "400", description = "Fechas inválidas"),
+            @ApiResponse(responseCode = "404", description = "Schedule no encontrado")
+    })
+    public ResponseEntity<RescheduleActivityResponseDto> rescheduleActivityReservations(
+            @PathVariable Long scheduleId,
+            @Valid @RequestBody RescheduleActivityRequest request) {
+        return ResponseEntity.ok(reservationService.rescheduleActivityReservations(scheduleId, request));
     }
 
     @GetMapping("/my")

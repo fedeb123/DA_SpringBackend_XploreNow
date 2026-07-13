@@ -17,6 +17,8 @@ import com.XploreNowAPI.SpringAPI.application.dto.activity.ActivityItineraryDto;
 import com.XploreNowAPI.SpringAPI.application.dto.reservation.CancelActivityResponseDto;
 import com.XploreNowAPI.SpringAPI.application.dto.reservation.CancelReservationResponseDto;
 import com.XploreNowAPI.SpringAPI.application.dto.reservation.CreateReservationRequest;
+import com.XploreNowAPI.SpringAPI.application.dto.reservation.RescheduleActivityRequest;
+import com.XploreNowAPI.SpringAPI.application.dto.reservation.RescheduleActivityResponseDto;
 import com.XploreNowAPI.SpringAPI.application.dto.reservation.ReservationDetailDto;
 import com.XploreNowAPI.SpringAPI.application.dto.reservation.ReservationSummaryDto;
 import com.XploreNowAPI.SpringAPI.domain.model.entity.Activity;
@@ -145,6 +147,35 @@ public class ReservationService {
         activityScheduleRepository.save(schedule);
 
         return new CancelActivityResponseDto(scheduleId, reservations.size(), "Actividad cancelada correctamente");
+    }
+
+    @Transactional
+    public RescheduleActivityResponseDto rescheduleActivityReservations(Long scheduleId, RescheduleActivityRequest request) {
+        ActivitySchedule schedule = activityScheduleRepository.findByIdForUpdate(scheduleId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Schedule not found"));
+
+        if (request.startDateTime() == null || request.endDateTime() == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Start and end date are required");
+        }
+
+        if (!request.endDateTime().isAfter(request.startDateTime())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "End date must be after start date");
+        }
+
+        List<Reservation> reservations = reservationRepository.findByScheduleIdAndStatus(scheduleId, ReservationStatus.CONFIRMED);
+
+        schedule.setStartDateTime(request.startDateTime());
+        schedule.setEndDateTime(request.endDateTime());
+        activityScheduleRepository.save(schedule);
+
+        for (Reservation reservation : reservations) {
+            var payload = "La actividad '" + schedule.getActivity().getName() + "' ha sido reprogramada. Nuevo horario: "
+                    + request.startDateTime() + " - " + request.endDateTime();
+            notificationService.createImmediate(reservation.getUser(), reservation, NotificationType.INFO, payload);
+            saveEvent(reservation, ReservationChangeType.RESCHEDULED, "Actividad reprogramada para el schedule " + scheduleId);
+        }
+
+        return new RescheduleActivityResponseDto(scheduleId, reservations.size(), "Actividad reprogramada correctamente");
     }
 
     @Transactional(readOnly = true)
