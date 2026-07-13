@@ -79,6 +79,8 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long>,
 
     List<Reservation> findByUserIdAndStatus(Long userId, ReservationStatus status);
 
+    List<Reservation> findByScheduleIdAndStatus(Long scheduleId, ReservationStatus status);
+
     @Query("""
             select r from Reservation r
             join fetch r.schedule s
