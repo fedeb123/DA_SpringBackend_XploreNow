@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.XploreNowAPI.SpringAPI.application.dto.reservation.CancelActivityResponseDto;
 import com.XploreNowAPI.SpringAPI.application.dto.reservation.CancelReservationResponseDto;
 import com.XploreNowAPI.SpringAPI.application.dto.reservation.CreateReservationRequest;
 import com.XploreNowAPI.SpringAPI.application.dto.reservation.ReservationDetailDto;
@@ -62,6 +63,16 @@ public class ReservationController {
     })
     public ResponseEntity<CancelReservationResponseDto> cancelReservation(@PathVariable Long reservationId) {
         return ResponseEntity.ok(reservationService.cancelReservation(reservationId));
+    }
+
+    @PostMapping("/activities/{scheduleId}/cancel")
+    @Operation(summary = "Cancelar actividad para todos los inscritos", description = "Cancela todas las reservas confirmadas asociadas a un schedule y notifica a los usuarios")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Actividad cancelada"),
+            @ApiResponse(responseCode = "404", description = "Schedule no encontrado")
+    })
+    public ResponseEntity<CancelActivityResponseDto> cancelActivityReservations(@PathVariable Long scheduleId) {
+        return ResponseEntity.ok(reservationService.cancelActivityReservations(scheduleId));
     }
 
     @GetMapping("/my")

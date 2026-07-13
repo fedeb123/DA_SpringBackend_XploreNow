@@ -3,6 +3,7 @@ package com.XploreNowAPI.SpringAPI.application.service;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 import java.util.UUID;
 
 import org.springframework.data.domain.Page;
@@ -13,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import com.XploreNowAPI.SpringAPI.application.dto.activity.ActivityItineraryDto;
+import com.XploreNowAPI.SpringAPI.application.dto.reservation.CancelActivityResponseDto;
 import com.XploreNowAPI.SpringAPI.application.dto.reservation.CancelReservationResponseDto;
 import com.XploreNowAPI.SpringAPI.application.dto.reservation.CreateReservationRequest;
 import com.XploreNowAPI.SpringAPI.application.dto.reservation.ReservationDetailDto;
@@ -23,6 +25,7 @@ import com.XploreNowAPI.SpringAPI.domain.model.entity.AppUser;
 import com.XploreNowAPI.SpringAPI.domain.model.entity.Reservation;
 import com.XploreNowAPI.SpringAPI.domain.model.entity.ReservationEvent;
 import com.XploreNowAPI.SpringAPI.domain.model.enumtype.CheckInStatus;
+import com.XploreNowAPI.SpringAPI.domain.model.enumtype.NotificationType;
 import com.XploreNowAPI.SpringAPI.domain.model.enumtype.ReservationChangeType;
 import com.XploreNowAPI.SpringAPI.domain.model.enumtype.ReservationStatus;
 import com.XploreNowAPI.SpringAPI.domain.repository.ActivityItineraryRepository;
@@ -30,8 +33,6 @@ import com.XploreNowAPI.SpringAPI.domain.repository.ActivityScheduleRepository;
 import com.XploreNowAPI.SpringAPI.domain.repository.CheckInRepository;
 import com.XploreNowAPI.SpringAPI.domain.repository.ReservationEventRepository;
 import com.XploreNowAPI.SpringAPI.domain.repository.ReservationRepository;
-import com.XploreNowAPI.SpringAPI.application.service.NotificationService;
-import com.XploreNowAPI.SpringAPI.domain.model.enumtype.NotificationType;
 
 import lombok.RequiredArgsConstructor;
 
@@ -120,6 +121,30 @@ public class ReservationService {
                 saved.getCancelledAt(),
                 "Reserva cancelada correctamente"
         );
+    }
+
+    @Transactional
+    public CancelActivityResponseDto cancelActivityReservations(Long scheduleId) {
+        ActivitySchedule schedule = activityScheduleRepository.findByIdForUpdate(scheduleId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Schedule not found"));
+
+        List<Reservation> reservations = reservationRepository.findByScheduleIdAndStatus(scheduleId, ReservationStatus.CONFIRMED);
+        int releasedSeats = reservations.stream().mapToInt(Reservation::getSeats).sum();
+
+        for (Reservation reservation : reservations) {
+            reservation.setStatus(ReservationStatus.CANCELLED);
+            reservation.setCancelledAt(LocalDateTime.now());
+            reservationRepository.save(reservation);
+            saveEvent(reservation, ReservationChangeType.CANCELLED, "Actividad cancelada para el schedule " + scheduleId);
+
+            var payload = "La actividad '" + schedule.getActivity().getName() + "' ha sido cancelada. Voucher: " + reservation.getVoucherCode();
+            notificationService.createImmediate(reservation.getUser(), reservation, NotificationType.INFO, payload);
+        }
+
+        schedule.setReservedSpots(Math.max(0, schedule.getReservedSpots() - releasedSeats));
+        activityScheduleRepository.save(schedule);
+
+        return new CancelActivityResponseDto(scheduleId, reservations.size(), "Actividad cancelada correctamente");
     }
 
     @Transactional(readOnly = true)
