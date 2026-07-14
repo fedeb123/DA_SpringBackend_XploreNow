@@ -24,14 +24,14 @@ public class NotificationScheduler {
     private final NotificationRepository notificationRepository;
     private final NotificationService notificationService;
 
-    // Corre segun lo que diga app properties
-    @Scheduled(fixedDelayString = "${notifications.reminder-sweep-interval}")
+    // Run every hour to schedule reminders 24h before start
+    @Scheduled(fixedDelayString = "PT1H")
     @Transactional
     public void schedule24hReminders() {
-        LocalDateTime from = LocalDateTime.now().plusHours(23).plusMinutes(30);
-        LocalDateTime to = LocalDateTime.now().plusHours(25).plusMinutes(30);
+        LocalDateTime from = LocalDateTime.now().plusHours(24);
+        LocalDateTime to = from.plusHours(1);
 
-        // Fetch all reservations and filter confirmed ones within the (overlapping) 24h window
+        // Fetch all reservations and filter confirmed ones within the 24h window
         List<Reservation> reservations = reservationRepository.findAll().stream()
                 .filter(r -> r.getStatus() == ReservationStatus.CONFIRMED)
                 .filter(r -> r.getSchedule() != null && r.getSchedule().getStartDateTime() != null)
