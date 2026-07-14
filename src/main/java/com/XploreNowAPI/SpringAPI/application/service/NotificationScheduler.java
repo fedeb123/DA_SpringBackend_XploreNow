@@ -41,7 +41,7 @@ public class NotificationScheduler {
         for (Reservation r : reservations) {
             // check if notification already exists
             List<Notification> exists = notificationRepository.findByUserIdAndStatus(r.getUser().getId(), com.XploreNowAPI.SpringAPI.domain.model.enumtype.NotificationStatus.PENDING);
-            boolean already = exists.stream().anyMatch(n -> n.getReservation() != null && n.getReservation().getId().equals(r.getId()));
+            boolean already = exists.stream().anyMatch(n -> n.getReservation() != null && n.getReservation().getId().equals(r.getId()) && n.getType() == NotificationType.REMINDER);
             if (!already) {
                 var payload = "Recordatorio: tu actividad '" + r.getSchedule().getActivity().getName() + "' es en 24 horas. Voucher: " + r.getVoucherCode();
                 notificationService.createScheduled(r.getUser(), r, NotificationType.REMINDER, payload, r.getSchedule().getStartDateTime().minusHours(24));
